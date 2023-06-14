@@ -1,3 +1,4 @@
+# %% 
 import pandas as pd
 import datetime as dt
 import numpy as np
@@ -7,14 +8,58 @@ import yfinance as yf
 from statsmodels.tsa.seasonal import seasonal_decompose
 from pandas_datareader import data as pdr
 
+from statsmodels.tsa.seasonal import MSTL
+from statsmodels.tsa.seasonal import DecomposeResult
 
-symbol = '2B7K.DE'   # iShares MSCI World SRI UCITS ETF EUR (Acc)
-# symbol='EUNL.DE'    # iShares Core MSCI World UCITS ETF USD (Acc)
 
-yf.pdr_override()  # <== that's all it takes :-)
-df = pdr.get_data_yahoo(tickers=[symbol], interval="1d")[['Close']]
-# df.head()
 
+
+# select the symbol to analyze
+
+symbol = '2B7K.DE'    # iShares MSCI World SRI UCITS ETF EUR (Acc)
+# symbol = 'EUNL.DE'    # iShares Core MSCI World UCITS ETF USD (Acc)
+# symbol = 'EURUSD=X'   # USD/EUR
+# symbol = 'GBPUSD=X'   # GBP/USD
+# symbol = 'AUDUSD=X'   # AUD/USD
+# symbol = '^ATX'       # Austrian Traded Index in EUR
+# symbol = 'ALV.DE'     # Allianz SE
+# symbol = 'ADS.DE'     # adidas AG
+# symbol = 'EBAY'       # eBay Inc.
+# symbol = 'AXP'        # American Express Company
+
+
+
+# should data be downloaded from internet (and saved to csv)
+# or read from csv
+
+download_symbol = False
+# download_symbol = True
+
+
+
+# select which seasonal decomposition routine to use
+
+use_STL = False     # naive decomposition
+# use_STL = True    # LOESS decompsition
+
+
+
+
+
+
+
+if download_symbol:
+    yf.pdr_override()  # <== that's all it takes :-)
+    df = pdr.get_data_yahoo(tickers=[symbol], interval="1d")[['Close']]
+    df.to_csv(f'{symbol}.csv')
+else:
+    df = pd.read_csv(f'{symbol}.csv')
+
+
+
+df.describe()
+
+# %%
 
 rolling_resolution = 100
 
@@ -57,7 +102,12 @@ resultDf['max'] = resultMax
 # ax.fill_between(resultDf.index, resultDf['min'], resultDf['max'], alpha=0.2)
 # ax.axvline(dt.date.today().timetuple().tm_yday, linestyle='dashed')
 
-decompose = seasonal_decompose(df['Close'], model='additive', period=365)
+
+if not use_STL:
+    decompose = seasonal_decompose(df['Close'], model='additive', period=365)
+else:
+    decompose = MSTL(df['Close'], periods=365)
+    decompose = decompose.fit()
 
 lastYear = dt.date.today().year-1
 resultDf['seasonal'] = decompose.seasonal[str(lastYear) + '-01-01':str(lastYear) + '-12-31'].values
@@ -65,20 +115,36 @@ resultDf['seasonal'] = decompose.seasonal[str(lastYear) + '-01-01':str(lastYear)
 # resultDf
 
 
-plt.figure(figsize=(20, 8), layout='constrained')
+plt.figure(figsize=(20, 15), layout='constrained')
 
-plt.subplot(311)
+plt.subplot(511)
 plt.xlabel('Date', fontsize=17)
-plt.title('Seasonality', fontsize=17)
+plt.title('Closing price', fontsize=17)
+df['Close'].plot(legend=True, label='close price')
+df['Close'].rolling(rolling_resolution).mean().plot(legend=True, label=str(rolling_resolution) + '-day moving average')
+
+plt.subplot(512)
+plt.xlabel('Date', fontsize=17)
+plt.title('Seasonality last year', fontsize=17)
 plt.axvline(mdates.date2num(dt.datetime(lastYear, dt.date.today().month, dt.date.today().day)), linestyle='dashed')
 decompose.seasonal[str(lastYear) + '-01-01':str(lastYear) + '-12-31'].plot()
 
-plt.subplot(312)
+plt.subplot(513)
+plt.xlabel('Date', fontsize=17)
+plt.title('Seasonality overall', fontsize=17)
+plt.axvline(mdates.date2num(dt.datetime(lastYear, dt.date.today().month, dt.date.today().day)), linestyle='dashed')
+decompose.seasonal.plot()
+
+plt.subplot(514)
 plt.xlabel('Date', fontsize=17)
 plt.title('Trend', fontsize=17)
 decompose.trend.plot()
 
-plt.subplot(313)
+plt.subplot(515)
 plt.xlabel('Date', fontsize=17)
 plt.title('Residual', fontsize=17)
 decompose.resid.plot()
+
+input('press <ENTER> to continue')
+
+# %%
