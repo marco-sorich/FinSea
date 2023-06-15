@@ -16,7 +16,7 @@ from statsmodels.tsa.seasonal import DecomposeResult
 
 # select the symbol to analyze
 
-symbol = '2B7K.DE'    # iShares MSCI World SRI UCITS ETF EUR (Acc)
+# symbol = '2B7K.DE'    # iShares MSCI World SRI UCITS ETF EUR (Acc)
 # symbol = 'EUNL.DE'    # iShares Core MSCI World UCITS ETF USD (Acc)
 # symbol = 'EURUSD=X'   # USD/EUR
 # symbol = 'GBPUSD=X'   # GBP/USD
@@ -25,22 +25,18 @@ symbol = '2B7K.DE'    # iShares MSCI World SRI UCITS ETF EUR (Acc)
 # symbol = 'ALV.DE'     # Allianz SE
 # symbol = 'ADS.DE'     # adidas AG
 # symbol = 'EBAY'       # eBay Inc.
-# symbol = 'AXP'        # American Express Company
+symbol = 'AXP'        # American Express Company
 
 
 
 # should data be downloaded from internet (and saved to csv)
 # or read from csv
-
 download_symbol = False
-# download_symbol = True
 
 
 
 # select which seasonal decomposition routine to use
-
-use_STL = False     # naive decomposition
-# use_STL = True    # LOESS decompsition
+use_STL = False 
 
 
 
@@ -53,15 +49,17 @@ if download_symbol:
     df = pdr.get_data_yahoo(tickers=[symbol], interval="1d")[['Close']]
     df.to_csv(f'{symbol}.csv')
 else:
-    df = pd.read_csv(f'{symbol}.csv')
+    df = pd.read_csv(f'{symbol}.csv', parse_dates=['Date'], index_col=['Date'])
 
 
 
-df.describe()
+
+
+#df.index
 
 # %%
 
-rolling_resolution = 100
+rolling_resolution = 200
 
 # plt.figure(figsize=(20, 8))
 # plt.xlabel('Data', fontsize=17)
@@ -74,7 +72,6 @@ rolling_resolution = 100
 # df[symbol].plot(legend=True, label='20-day VWAP')
 
 # plt.show()
-
 
 df.index = pd.to_datetime(df.index)
 df = df.asfreq('d')                 # set correct frequency
@@ -96,6 +93,14 @@ resultDf['mean'] = resultMean
 resultDf['min'] = resultMin
 resultDf['max'] = resultMax
 
+lastYear = dt.date.today().year-1
+range = pd.date_range(str(lastYear) + '-01-01', str(lastYear) + '-12-31', freq='D')
+resultDf['date'] = range
+resultDf = resultDf.set_index('date')
+# resultDf
+
+# %%
+
 
 # fig, ax = plt.subplots(figsize=(20, 10))
 # ax.plot(resultDf.index, resultDf['mean'], '-')
@@ -109,11 +114,11 @@ else:
     decompose = MSTL(df['Close'], periods=365)
     decompose = decompose.fit()
 
-lastYear = dt.date.today().year-1
 resultDf['seasonal'] = decompose.seasonal[str(lastYear) + '-01-01':str(lastYear) + '-12-31'].values
 
-# resultDf
+#resultDf
 
+# %%
 
 plt.figure(figsize=(20, 15), layout='constrained')
 
@@ -127,12 +132,11 @@ plt.subplot(512)
 plt.xlabel('Date', fontsize=17)
 plt.title('Seasonality last year', fontsize=17)
 plt.axvline(mdates.date2num(dt.datetime(lastYear, dt.date.today().month, dt.date.today().day)), linestyle='dashed')
-decompose.seasonal[str(lastYear) + '-01-01':str(lastYear) + '-12-31'].plot()
+resultDf['seasonal'].plot()
 
 plt.subplot(513)
 plt.xlabel('Date', fontsize=17)
 plt.title('Seasonality overall', fontsize=17)
-plt.axvline(mdates.date2num(dt.datetime(lastYear, dt.date.today().month, dt.date.today().day)), linestyle='dashed')
 decompose.seasonal.plot()
 
 plt.subplot(514)
@@ -144,7 +148,5 @@ plt.subplot(515)
 plt.xlabel('Date', fontsize=17)
 plt.title('Residual', fontsize=17)
 decompose.resid.plot()
-
-input('press <ENTER> to continue')
 
 # %%
