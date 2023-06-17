@@ -51,6 +51,8 @@ resultDf['mean'] = resultMean
 resultDf['min'] = resultMin
 resultDf['max'] = resultMax
 
+#https://stackoverflow.com/questions/66968915/how-can-i-plot-only-the-month-and-the-day-without-the-year-from-this-pandas-da
+#resultDf.index = resultDf.index.strftime('%m-%d')
 
 # fig, ax = plt.subplots(figsize=(20, 10))
 # ax.plot(resultDf.index, resultDf['mean'], '-')
