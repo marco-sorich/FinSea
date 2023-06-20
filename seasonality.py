@@ -9,7 +9,6 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 from pandas_datareader import data as pdr
 
 from statsmodels.tsa.seasonal import MSTL
-from statsmodels.tsa.seasonal import DecomposeResult
 
 
 
@@ -36,7 +35,7 @@ download_symbol = False
 
 
 # select which seasonal decomposition routine to use
-use_STL = False 
+use_STL = True 
 
 
 
@@ -97,6 +96,11 @@ lastYear = dt.date.today().year-1
 range = pd.date_range(str(lastYear) + '-01-01', str(lastYear) + '-12-31', freq='D')
 resultDf['date'] = range
 resultDf = resultDf.set_index('date')
+
+
+#https://stackoverflow.com/questions/66968915/how-can-i-plot-only-the-month-and-the-day-without-the-year-from-this-pandas-da
+#resultDf.index = resultDf.index.strftime('%m-%d')
+
 # resultDf
 
 # %%
@@ -123,29 +127,26 @@ resultDf['seasonal'] = decompose.seasonal[str(lastYear) + '-01-01':str(lastYear)
 plt.figure(figsize=(20, 15), layout='constrained')
 
 plt.subplot(511)
-plt.xlabel('Date', fontsize=17)
 plt.title('Closing price', fontsize=17)
 df['Close'].plot(legend=True, label='close price')
 df['Close'].rolling(rolling_resolution).mean().plot(legend=True, label=str(rolling_resolution) + '-day moving average')
 
 plt.subplot(512)
-plt.xlabel('Date', fontsize=17)
 plt.title('Seasonality last year', fontsize=17)
 plt.axvline(mdates.date2num(dt.datetime(lastYear, dt.date.today().month, dt.date.today().day)), linestyle='dashed')
+plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d. %b"))
 resultDf['seasonal'].plot()
 
 plt.subplot(513)
-plt.xlabel('Date', fontsize=17)
 plt.title('Seasonality overall', fontsize=17)
 decompose.seasonal.plot()
 
 plt.subplot(514)
-plt.xlabel('Date', fontsize=17)
 plt.title('Trend', fontsize=17)
 decompose.trend.plot()
 
 plt.subplot(515)
-plt.xlabel('Date', fontsize=17)
 plt.title('Residual', fontsize=17)
 decompose.resid.plot()
 
