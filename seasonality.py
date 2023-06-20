@@ -1,4 +1,5 @@
-# %% 
+# %%
+
 import pandas as pd
 import datetime as dt
 import numpy as np
@@ -16,7 +17,7 @@ from statsmodels.tsa.seasonal import MSTL
 # select the symbol to analyze
 
 # symbol = '2B7K.DE'    # iShares MSCI World SRI UCITS ETF EUR (Acc)
-# symbol = 'EUNL.DE'    # iShares Core MSCI World UCITS ETF USD (Acc)
+symbol = 'EUNL.DE'    # iShares Core MSCI World UCITS ETF USD (Acc)
 # symbol = 'EURUSD=X'   # USD/EUR
 # symbol = 'GBPUSD=X'   # GBP/USD
 # symbol = 'AUDUSD=X'   # AUD/USD
@@ -24,7 +25,7 @@ from statsmodels.tsa.seasonal import MSTL
 # symbol = 'ALV.DE'     # Allianz SE
 # symbol = 'ADS.DE'     # adidas AG
 # symbol = 'EBAY'       # eBay Inc.
-symbol = 'AXP'        # American Express Company
+# symbol = 'AXP'        # American Express Company
 
 
 
@@ -36,6 +37,12 @@ download_symbol = False
 
 # select which seasonal decomposition routine to use
 use_STL = True 
+
+
+
+
+# set maximum number of years to analyze
+max_num_of_years = 5
 
 
 
@@ -54,36 +61,26 @@ else:
 
 
 
-#df.index
+df
 
 # %%
 
 rolling_resolution = 200
-
-# plt.figure(figsize=(20, 8))
-# plt.xlabel('Data', fontsize=17)
-# plt.ylabel('Price', fontsize=17)
-# plt.title('Daily closing price', fontsize=17)
-# plt.grid(b=True, which='major', color='b', linestyle='-')
-
-# df['Close'].plot(legend=True, label='close price')
-# df['Close'].rolling(rolling_resolution).mean().plot(legend=True, label=str(rolling_resolution) + '-day moving average')
-# df[symbol].plot(legend=True, label='20-day VWAP')
-
-# plt.show()
 
 df.index = pd.to_datetime(df.index)
 df = df.asfreq('d')                 # set correct frequency
 df = df.fillna(method='ffill')      # fill up missing values
 
 resultDf = pd.DataFrame()
-for year in list(set(df.index.year))[1:-1]:
+numOfYears = 0
+for year in sorted(list(set(df.index.year)), reverse=True)[1:-1]:
+    numOfYears += 1
+    if numOfYears > max_num_of_years:
+        break
     curYearValues = df[str(year) + '-01-01':str(year) + '-12-31']['Close'].values
-    if curYearValues.size == 365:                     # take a regular complete year
-        resultDf[str(year)] = curYearValues
-    elif curYearValues.size == 366:
+    if curYearValues.size == 366:
         curYearValues = np.delete(curYearValues, 59)  # remove Feb. 29 of leap year
-        resultDf[str(year)] = curYearValues
+    resultDf[str(year)] = curYearValues
 
 resultMean = resultDf.mean(axis=1)
 resultMin = resultDf.min(axis=1)
@@ -97,19 +94,11 @@ range = pd.date_range(str(lastYear) + '-01-01', str(lastYear) + '-12-31', freq='
 resultDf['date'] = range
 resultDf = resultDf.set_index('date')
 
+# resultDf.index = resultDf.index.strftime('%d. %b')
 
-#https://stackoverflow.com/questions/66968915/how-can-i-plot-only-the-month-and-the-day-without-the-year-from-this-pandas-da
-#resultDf.index = resultDf.index.strftime('%m-%d')
-
-# resultDf
+resultDf
 
 # %%
-
-
-# fig, ax = plt.subplots(figsize=(20, 10))
-# ax.plot(resultDf.index, resultDf['mean'], '-')
-# ax.fill_between(resultDf.index, resultDf['min'], resultDf['max'], alpha=0.2)
-# ax.axvline(dt.date.today().timetuple().tm_yday, linestyle='dashed')
 
 
 if not use_STL:
@@ -118,36 +107,46 @@ else:
     decompose = MSTL(df['Close'], periods=365)
     decompose = decompose.fit()
 
-resultDf['seasonal'] = decompose.seasonal[str(lastYear) + '-01-01':str(lastYear) + '-12-31'].values
+numOfYears = 0
+for year in sorted(list(set(decompose.seasonal.index.year)), reverse=True)[1:-1]:
+    numOfYears += 1
+    if numOfYears > max_num_of_years:
+        break
+    curYearValues = decompose.seasonal[str(year) + '-01-01':str(year) + '-12-31'].values
+    if curYearValues.size == 366:
+        curYearValues = np.delete(curYearValues, 59)  # remove Feb. 29 of leap year
+    resultDf['seasonal-' + str(year)] = curYearValues
 
-#resultDf
+
+resultDf
 
 # %%
 
 plt.figure(figsize=(20, 15), layout='constrained')
+plt.suptitle('Analysis of ' + symbol, fontsize=23)
 
-plt.subplot(511)
+plt.subplot(411)
 plt.title('Closing price', fontsize=17)
 df['Close'].plot(legend=True, label='close price')
 df['Close'].rolling(rolling_resolution).mean().plot(legend=True, label=str(rolling_resolution) + '-day moving average')
 
-plt.subplot(512)
-plt.title('Seasonality last year', fontsize=17)
+plt.subplot(412)
+plt.title('Seasonality last years', fontsize=17)
 plt.axvline(mdates.date2num(dt.datetime(lastYear, dt.date.today().month, dt.date.today().day)), linestyle='dashed')
 plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
 plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d. %b"))
-resultDf['seasonal'].plot()
+for col in resultDf.columns:
+    if col.startswith('seasonal-'):
+        resultDf[col].plot(legend=True)
 
-plt.subplot(513)
-plt.title('Seasonality overall', fontsize=17)
-decompose.seasonal.plot()
+plt.subplot(413)
+plt.title('Seasonality/Residual overall', fontsize=17)
+decompose.seasonal.plot(legend=True)
+decompose.resid.plot(legend=True)
 
-plt.subplot(514)
+plt.subplot(414)
 plt.title('Trend', fontsize=17)
 decompose.trend.plot()
 
-plt.subplot(515)
-plt.title('Residual', fontsize=17)
-decompose.resid.plot()
 
 # %%
