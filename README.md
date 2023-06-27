@@ -91,7 +91,7 @@ Following actions have to be executed always to open the notebook:
 
     Open Windows PowerShell and change to the directory with unzipped notebook.
 
-* __Open the notebook_
+* __Open the notebook__
     ```PowerShell
     .venv\Scripts\activate.bat
     jupyter notebook seasonality.ipynb
