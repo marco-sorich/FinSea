@@ -14,7 +14,7 @@ Following actions have to be executed initially for preparation or each time on 
 
     Download from https://www.python.org/downloads/
 
-* __Download and unzip latest version notebook__
+* __Download and unzip latest version of the notebook__
 
     Download the project as zip file and unzip to a desired location.
 
@@ -36,7 +36,7 @@ Following actions have to be executed initially for preparation or each time on 
 
     Download from https://www.python.org/downloads/
 
-* __Download and unzip latest version notebook__
+* __Download and unzip latest version of the notebook__
 
     Download the project as zip file and unzip to a desired location.
 
@@ -58,7 +58,7 @@ Following actions have to be executed initially for preparation or each time on 
 
     Download from https://www.python.org/downloads/
 
-* __Download and unzip latest version notebook__
+* __Download and unzip latest version of the notebook__
 
     Download the project as zip file and unzip to a desired location.
 
