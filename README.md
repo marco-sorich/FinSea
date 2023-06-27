@@ -111,4 +111,4 @@ Following actions have to be executed always to open the notebook:
 
 
 ## Legal
-__Seasonality Chart Analysis__ is distributed under the GNU GENERAL PUBLIC LICENSE version 3. See the LICENSE.txt file in the release for details.
+__Seasonality Chart Analysis__ is distributed under the GNU GENERAL PUBLIC LICENSE version 3. See the LICENSE file in the release for details.
