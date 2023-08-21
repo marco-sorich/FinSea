@@ -3,3 +3,4 @@ venv/
 .vscode/
 .downloads/
 .ipynb_checkpoints/seasonality-checkpoint.ipynb
+*.pyc
