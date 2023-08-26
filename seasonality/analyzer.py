@@ -56,6 +56,7 @@ class Analyzer:
     # df - original history data as pandas dataframe as it is downloaded
     # rangeMax5yrs - pandas date_range of last max_num_of_years years or less if no more symbol history data is available
     # rangeNumOfYears - number of years from rangeMax5yrs
+    # sasonalDecompDf - pandas dataframe containing decomposed seasonal
     # trendDecompDf - pandas dataframe containing decomposed trend
     # residDecompDf - pandas dataframe containing decomposed residual
     # annualDf - long form pandas dataframe containing original data of rangeMax5yrs date range
@@ -66,9 +67,10 @@ class Analyzer:
     # weekdailySeasonalDecompDf - long form pandas dataframe containing weekdaily decomposed seasonal data of rangeMax5yrs date range
     # monthlySeasonalDecompDf - long form pandas dataframe containing monthly decomposed seasonal data of rangeMax5yrs date range
 
-    def __init__(self, symbol, years):
+    def __init__(self, symbol, years, robust=False):
         self.symbol = symbol
         self.years = years
+        self.robust = robust
 
         # set number of day of rolling averages for annual data plots
         self.annual_rolling_days = 20
@@ -135,34 +137,26 @@ class Analyzer:
         decompDf = decompDf[self.rangeMax5yrs.min():pd.to_datetime('today')]
 
         # prepare the 3 dataframes for seasonal, trend and residual
-        seasonalDecompDf = pd.DataFrame()
+        self.seasonalDecompDf = pd.DataFrame()
         self.trendDecompDf = pd.DataFrame()
         self.residDecompDf = pd.DataFrame()
 
         # simplest form of STL
-        decomposeSimpleStl = STL(decompDf['Close'], period=365)
+        decomposeSimpleStl = STL(decompDf['Close'], period=365, robust=self.robust)
         decomposeSimpleRes = decomposeSimpleStl.fit()
 
-        seasonalDecompDf['Simple STL'] = decomposeSimpleRes.seasonal
-        self.trendDecompDf['Simple STL'] = decomposeSimpleRes.trend
-        self.residDecompDf['Simple STL'] = decomposeSimpleRes.resid
-
-        # simplest form of STL
-        decomposeRobustStl = STL(decompDf['Close'], period=365, robust=True)
-        decomposeRobustRes = decomposeRobustStl.fit()
-
-        seasonalDecompDf['Robust STL'] = decomposeRobustRes.seasonal
-        self.trendDecompDf['Robust STL'] = decomposeRobustRes.trend
-        self.residDecompDf['Robust STL'] = decomposeRobustRes.resid
+        self.seasonalDecompDf['value'] = decomposeSimpleRes.seasonal
+        self.trendDecompDf['value'] = decomposeSimpleRes.trend
+        self.residDecompDf['value'] = decomposeSimpleRes.resid
 
         # prepare annual dataframes with multiindex including the rolling averages
-        self.annunalSeasonalDecompDf = _dfToLongForm(seasonalDecompDf.assign(**{'rolling average': seasonalDecompDf['Simple STL'].rolling(self.annual_rolling_days).mean()}), self.rangeMax5yrs)
-        # annunalTrendDecompDf = _dfToLongForm(self.trendDecompDf.assign(**{'rolling average': self.trendDecompDf['Simple STL'].rolling(self.annual_rolling_days).mean()}), self.rangeMax5yrs)
-        self.annunalResidDecompDf = _dfToLongForm(self.residDecompDf.assign(**{'rolling average': self.residDecompDf['Simple STL'].rolling(self.annual_rolling_days).mean()}), self.rangeMax5yrs)
+        self.annunalSeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf.assign(**{'rolling average': self.seasonalDecompDf['value'].rolling(self.annual_rolling_days).mean()}), self.rangeMax5yrs)
+        # annunalTrendDecompDf = _dfToLongForm(self.trendDecompDf.assign(**{'rolling average': self.trendDecompDf['value'].rolling(self.annual_rolling_days).mean()}), self.rangeMax5yrs)
+        self.annunalResidDecompDf = _dfToLongForm(self.residDecompDf.assign(**{'rolling average': self.residDecompDf['value'].rolling(self.annual_rolling_days).mean()}), self.rangeMax5yrs)
 
         # prepare other dataframes for categorial plots
-        self.monthlySeasonalDecompDf = _dfToLongForm(seasonalDecompDf.resample('M').mean(), self.rangeMax5yrs, freq='M', colName='Month', colContent='%B', withFill=False, dropLeap=False)
-        self.weekdailySeasonalDecompDf = _dfToLongForm(seasonalDecompDf, self.rangeMax5yrs, freq='B', colName='Weekday', colContent='%A', withFill=False, dropLeap=False)
-        self.quarterlySeasonalDecompDf = _dfToLongForm(seasonalDecompDf.resample('Q').mean(), self.rangeMax5yrs, freq='Q', colName='Quarter', colContent='%B', withFill=False, dropLeap=False)
-        self.quarterlySeasonalDecompDf = _dfToLongForm(seasonalDecompDf.resample('Q').mean(), self.rangeMax5yrs, freq='Q', colName='Quarter', colContent='%B', withFill=False, dropLeap=False)
-        self.weeklySeasonalDecompDf = _dfToLongForm(seasonalDecompDf.resample('W').mean(), self.rangeMax5yrs, freq='W', colName='Week', colContent='%V', withFill=False, dropLeap=False)
+        self.monthlySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf.resample('M').mean(), self.rangeMax5yrs, freq='M', colName='Month', colContent='%B', withFill=False, dropLeap=False)
+        self.weekdailySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf, self.rangeMax5yrs, freq='B', colName='Weekday', colContent='%A', withFill=False, dropLeap=False)
+        self.quarterlySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf.resample('Q').mean(), self.rangeMax5yrs, freq='Q', colName='Quarter', colContent='%B', withFill=False, dropLeap=False)
+        self.quarterlySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf.resample('Q').mean(), self.rangeMax5yrs, freq='Q', colName='Quarter', colContent='%B', withFill=False, dropLeap=False)
+        self.weeklySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf.resample('W').mean(), self.rangeMax5yrs, freq='W', colName='Week', colContent='%V', withFill=False, dropLeap=False)
