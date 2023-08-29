@@ -1,3 +1,12 @@
+"""
+Analyzer module to perform the analysis for seasonality behaviour of financial symbols.
+
+Classes:
+--------
+    Analyzer
+    Performs the analyzer calculation and fills some pandas dataframes with resuls.
+"""
+
 import os
 import datetime as dt
 import pickle
@@ -34,7 +43,7 @@ def _dfToLongForm(
 
     This routine takes a dataframe with expected data over several years and
     creates a new target dataframe with over one year with multiple values
-    for each 'freq' (e.g. day) of several years.
+    for each `freq` (e.g. day) of several years.
 
     Parameters:
     -----------
@@ -45,16 +54,16 @@ def _dfToLongForm(
         Date range to which the input dataframe should be cropped
 
         freq: str, optional
-        Target frequency of the new dataframe in pandas 'asfreq' format (default is 'd' for day)
+        Target frequency of the new dataframe in pandas `asfreq` format (default is 'd' for day)
 
         colName: str, optional
         Name of the 'freq' column in the new target dataframe (default is 'Day')
 
         colContent: str, optional
-        Content of the column according to strftime conversion format (default is '%m-%d' for "<MM>-<DD>")
+        Content of the column according to `strftime` conversion format (default is '%m-%d' for "<MM>-<DD>")
 
         withFill: bool, optional
-        Should missing values be filled with 'fillna' (default is True)
+        Should missing values be filled with `fillna` (default is True)
 
         dropLeap: bool, optional
         Should leap days be dropped (default is True)
@@ -114,34 +123,34 @@ class Analyzer:
         Number of years from rangeMaxYrs
 
         sasonalDecompDf: pd.DataFrame
-        Decomposed seasonal values spanning over 'rangeNumOfYears' years.
+        Decomposed seasonal values spanning over `rangeNumOfYears` years.
 
         trendDecompDf: pd.DataFrame
-        Decomposed trend values spanning over 'rangeNumOfYears' years.
+        Decomposed trend values spanning over `rangeNumOfYears` years.
 
         residDecompDf: pd.DataFrame
-        Decomposed residual values spanning over 'rangeNumOfYears' years.
+        Decomposed residual values spanning over `rangeNumOfYears` years.
 
         annualDf: pd.DataFrame
-        Original data over whole year holding 'rangeNumOfYears' values per day.
+        Original data over whole year holding `rangeNumOfYears` values per day.
 
         annunalSeasonalDecompDf: pd.DataFrame
-        Decomposed annual daily seasonal values over whole year holding 'rangeNumOfYears' values per day.
+        Decomposed annual daily seasonal values over whole year holding `rangeNumOfYears` values per day.
 
         annunalResidDecompDf: pd.DataFrame
-        Decomposed annual daily residual values over whole year holding 'rangeNumOfYears' values per day.
+        Decomposed annual daily residual values over whole year holding `rangeNumOfYears` values per day.
 
         quarterlySeasonalDecompDf: pd.DataFrame
-        Decomposed annual quarterly seasonal values over whole year holding 'rangeNumOfYears' values per day.
+        Decomposed annual quarterly seasonal values over whole year holding `rangeNumOfYears` values per day.
 
         weeklySeasonalDecompDf: pd.DataFrame
-        Decomposed annual weekly seasonal values over whole year holding 'rangeNumOfYears' values per day.
+        Decomposed annual weekly seasonal values over whole year holding `rangeNumOfYears` values per day.
 
         monthlySeasonalDecompDf: pd.DataFrame
-        Decomposed annual monthly seasonal values over whole year holding 'rangeNumOfYears' values per day.
+        Decomposed annual monthly seasonal values over whole year holding `rangeNumOfYears` values per day.
 
         weekdailySeasonalDecompDf: pd.DataFrame
-        Decomposed weekdaily seasonal values over whole year holding 'rangeNumOfYears' values per day.
+        Decomposed weekdaily seasonal values over whole year holding `rangeNumOfYears` values per day.
     """
 
     def __init__(self, symbol: str, years: dt.datetime, robust: bool = False, annual_rolling_days: int = 20):
