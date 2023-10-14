@@ -153,7 +153,7 @@ class Analyzer:
         Decomposed weekdaily seasonal values over whole year holding `rangeNumOfYears` values per day.
     """
 
-    def __init__(self, symbol: str, years: dt.datetime, robust: bool = False, annual_rolling_days: int = 20):
+    def __init__(self, symbol: str, years: dt.datetime, robust: bool = False, annual_rolling_days: int = 200):
         """Constructor
 
         Parameters:
