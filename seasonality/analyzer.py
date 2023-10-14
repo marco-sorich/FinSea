@@ -277,5 +277,4 @@ class Analyzer:
         self.monthlySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf.resample('M').mean(), self.rangeMaxYrs, freq='M', colName='Month', colContent='%B', withFill=False, dropLeap=False)
         self.weekdailySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf, self.rangeMaxYrs, freq='B', colName='Weekday', colContent='%A', withFill=False, dropLeap=False)
         self.quarterlySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf.resample('Q').mean(), self.rangeMaxYrs, freq='Q', colName='Quarter', colContent='%B', withFill=False, dropLeap=False)
-        self.quarterlySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf.resample('Q').mean(), self.rangeMaxYrs, freq='Q', colName='Quarter', colContent='%B', withFill=False, dropLeap=False)
         self.weeklySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf.resample('W').mean(), self.rangeMaxYrs, freq='W', colName='Week', colContent='%V', withFill=False, dropLeap=False)
