@@ -113,32 +113,50 @@ class Analyzer:
         ticker: yf.Ticker
         Static information about selected symbol.
 
-        df: pd.DataFrame
-        Original history data as it is downloaded. This is not cropped to given range of years.
-
         rangeMaxYrs: pd.date_range
         Actual range of years. Might be identical of value given by constructor or less, if less data is available only.
 
         rangeNumOfYears: int
         Number of years from rangeMaxYrs
 
+        
+
+
+        Full history data that was available for download:
+
+        df: pd.DataFrame
+        Original history data as it is downloaded. This is not cropped to given range of years.
+
+        
+
+        
+        Decomposed data spanning over `rangeNumOfYears` years:
+
         sasonalDecompDf: pd.DataFrame
-        Decomposed seasonal values spanning over `rangeNumOfYears` years.
+        Seasonal values splitted from trend.
 
         trendDecompDf: pd.DataFrame
-        Decomposed trend values spanning over `rangeNumOfYears` years.
+        Trend values without seasonality.
 
         residDecompDf: pd.DataFrame
-        Decomposed residual values spanning over `rangeNumOfYears` years.
+        Residual values which is neither trend nor seasonality.
+
+        
+
+        Annual data over one full year, each year of 'rangeNumOfYears' is in a separate column:
 
         annualDf: pd.DataFrame
-        Original data over whole year holding `rangeNumOfYears` values per day.
+        Original data over whole year.
 
         annunalSeasonalDecompDf: pd.DataFrame
-        Decomposed annual daily seasonal values over whole year holding `rangeNumOfYears` values per day.
+        Decomposed annual daily seasonal values.
 
         annunalResidDecompDf: pd.DataFrame
-        Decomposed annual daily residual values over whole year holding `rangeNumOfYears` values per day.
+        Decomposed annual daily residual values.
+
+        
+
+        Same data over different other timeframes:
 
         quarterlySeasonalDecompDf: pd.DataFrame
         Decomposed annual quarterly seasonal values over whole year holding `rangeNumOfYears` values per day.
