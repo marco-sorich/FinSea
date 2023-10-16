@@ -130,7 +130,7 @@ class Analyzer:
         
 
         
-        Decomposed data spanning over `rangeNumOfYears` years:
+        Decomposed data spanning over `rangeNumOfYears` years (leapdays cropped):
 
         sasonalDecompDf: pd.DataFrame
         Seasonal values splitted from trend.

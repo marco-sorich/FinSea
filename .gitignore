@@ -4,3 +4,4 @@ venv/
 .downloads/
 .ipynb_checkpoints/seasonality-checkpoint.ipynb
 *.pyc
+myplots.pdf
