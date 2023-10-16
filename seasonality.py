@@ -44,9 +44,9 @@ analyzer.calc()
 
 
 
-# setup general figure size
-generalPlotWidth = 15
-generalSubPlotHight = 3
+# Set the figure size to DIN A4 dimensions with a 10mm border
+fig_width = 210 + 20  # 210mm + 10mm border on each side
+fig_height = 297 + 20  # 297mm + 10mm border on each side
 
 # set number of days for rolling averages for full data plots
 rolling_narrow_resolution = 50
@@ -63,7 +63,7 @@ with PdfPages('myplots.pdf') as pdf:
 
     # first page - plot overall analysis
     numSubPlots = 3
-    figOverall, axs = plt.subplots(numSubPlots, 1, figsize=(generalPlotWidth, generalSubPlotHight*numSubPlots), layout="constrained")
+    figOverall, axs = plt.subplots(numSubPlots, 1, figsize=(fig_width/25.4, fig_height/25.4), layout="constrained")
     figOverall.suptitle(f'Overall analysis of {analyzer.ticker.info["longName"]}\n\n', fontsize=20)
 
     currentAxis = 0
@@ -95,16 +95,16 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].set_ylabel(analyzer.ticker.info['currency'])
     currentAxis += 1
 
-    pdf.savefig(figOverall)
+    pdf.savefig(figOverall, facecolor='w')
 
     # Second page - plot annual analysis
     axs = []
     numSubPlots = 5
 
-    figannually = plt.figure(layout="constrained", figsize=(generalPlotWidth, generalSubPlotHight*numSubPlots))
+    figannually = plt.figure(layout="constrained", figsize=(fig_width/25.4, fig_height/25.4))
     gs = GridSpec(5, 3, figure=figannually)
     sns.set_theme('paper')
-    figannually.suptitle(f'Annual analysis of {analyzer.ticker.info["longName"]}\n\n', fontsize=20)
+    figannually.suptitle(f'Annual analysis of {analyzer.ticker.info["longName"]}\nof last {analyzer.rangeNumOfYears} years\n', fontsize=20)
 
     currentAxis = 0
 
@@ -116,7 +116,7 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
     axs[currentAxis].set_ylabel('USD')
     axs[currentAxis].set_xlabel('Date')
-    axs[currentAxis].set_title(f'annually closing prices of last {analyzer.rangeNumOfYears} years')
+    axs[currentAxis].set_title(f'annually closing prices')
     axs[currentAxis].legend(labels=['Daily Mean', '90% Confidence', 'Mean of Rolling Averages'])
     axs[currentAxis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
     currentAxis += 1
@@ -129,7 +129,7 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
     axs[currentAxis].set_ylabel('USD')
     axs[currentAxis].set_xlabel('Date')
-    axs[currentAxis].set_title(f'annually seasonal price changes of last {analyzer.rangeNumOfYears} years')
+    axs[currentAxis].set_title(f'annually seasonal price changes')
     axs[currentAxis].legend(labels=['Daily Mean', '90% Confidence', 'Mean of Rolling Averages'])
     axs[currentAxis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
     currentAxis += 1
@@ -142,7 +142,7 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
     axs[currentAxis].set_ylabel('USD')
     axs[currentAxis].set_xlabel('Date')
-    axs[currentAxis].set_title(f'annually non-seasonal price changes of last {analyzer.rangeNumOfYears} years')
+    axs[currentAxis].set_title(f'Annually non-seasonal price changes')
     axs[currentAxis].legend(labels=['Daily Mean', '90% Confidence', 'Mean of Rolling Averages'])
     axs[currentAxis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
     currentAxis += 1
@@ -151,31 +151,32 @@ with PdfPages('myplots.pdf') as pdf:
     # Plot quarterly seasonal prices
     sns.boxplot(data=analyzer.quarterlySeasonalDecompDf, x='Quarter', y='value', ax=axs[currentAxis])
     axs[currentAxis].set_ylabel('USD')
-    axs[currentAxis].set_title(f'Quarterly seasonal price changes of last {analyzer.rangeNumOfYears} years')
+    axs[currentAxis].set_title(f'Quarterly')
     currentAxis += 1
 
     axs.append(figannually.add_subplot(gs[3, 1:]))
     # Plot monthly seasonal prices
     sns.boxplot(data=analyzer.monthlySeasonalDecompDf, x='Month', y='value', ax=axs[currentAxis])
     axs[currentAxis].set_ylabel('USD')
-    axs[currentAxis].set_title(f'Monthly seasonal price changes of last {analyzer.rangeNumOfYears} years')
+    axs[currentAxis].set_title(f'Monthly')
     currentAxis += 1
 
     axs.append(figannually.add_subplot(gs[4, :-1]))
     # Plot weekly seasonal prices
     sns.boxplot(data=analyzer.weeklySeasonalDecompDf, x='Week', y='value', ax=axs[currentAxis])
     axs[currentAxis].set_ylabel('USD')
-    axs[currentAxis].set_title(f'Weekly seasonal price changes of last {analyzer.rangeNumOfYears} years')
+    axs[currentAxis].set_title(f'Weekly')
+    axs[currentAxis].tick_params(axis='x', labelsize=5)
     currentAxis += 1
 
     axs.append(figannually.add_subplot(gs[4, 2]))
     # Plot weekdaily seasonal prices
     sns.boxplot(data=analyzer.weekdailySeasonalDecompDf, x='Weekday', y='value', ax=axs[currentAxis])
     axs[currentAxis].set_ylabel('USD')
-    axs[currentAxis].set_title(f'Weekdaily seasonal price changes of last {analyzer.rangeNumOfYears} years')
+    axs[currentAxis].set_title(f'Weekdaily')
     currentAxis += 1
 
-    pdf.savefig(figannually)
+    pdf.savefig(figannually, facecolor='w')
 
 
 # Close the PDF file
