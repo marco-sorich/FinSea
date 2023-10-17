@@ -37,10 +37,22 @@ symbol = '^GSPC'      # S&P 500
 max_num_of_years = 5
 
 
+def printProgress(current: int, total: int) -> None:
+    """ Prints the progress of the analysis """
+    progress = (current + 1) / total
+    print("\r[%-20s] %d%%" % ('=' * int(20 * progress), 100 * progress), end='')
+    # print(f'\r{current}/{total} ({current/total*100:.2f}%)', end='')
+
+
+max_progress = 12
+cur_progress = 0
+printProgress(cur_progress, max_progress)
+
 analyzer = ssn.Analyzer(symbol, max_num_of_years)
 analyzer.calc()
 
-
+cur_progress += 1
+printProgress(cur_progress, max_progress)
 
 
 
@@ -84,6 +96,8 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].set_title(f'Daily close prices of last {analyzer.rangeNumOfYears} years')
     axs[currentAxis].set_ylabel(analyzer.ticker.info['currency'])
     currentAxis += 1
+    cur_progress += 1
+    printProgress(cur_progress, max_progress)
 
     # Plot overall closing prices of last x years with STL trend
     overallDf = pd.DataFrame(data=analyzer.trendDecompDf)
@@ -93,6 +107,8 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].set_title(f'Fitting of daily closing prices to STL trend of last {analyzer.rangeNumOfYears} years')
     axs[currentAxis].set_ylabel(analyzer.ticker.info['currency'])
     currentAxis += 1
+    cur_progress += 1
+    printProgress(cur_progress, max_progress)
 
     # Plot overall STL residual of last x years with STL trend
     overallDf = pd.DataFrame(data=analyzer.residDecompDf)
@@ -100,6 +116,9 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].set_title(f'Residual of STL trend of last {analyzer.rangeNumOfYears} years')
     axs[currentAxis].set_ylabel(analyzer.ticker.info['currency'])
     currentAxis += 1
+    currentAxis += 1
+    cur_progress += 1
+    printProgress(cur_progress, max_progress)
 
     pdf.savefig(figOverall, facecolor='w')
 
@@ -127,6 +146,8 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].legend(labels=['Daily Mean', '90% Confidence', 'Mean of Rolling Averages'])
     axs[currentAxis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
     currentAxis += 1
+    cur_progress += 1
+    printProgress(cur_progress, max_progress)
 
     axs.append(figAnnually.add_subplot(gs[1, :]))   # add plot over full line
     # Plot annual seasonal prices with confidence band
@@ -140,6 +161,8 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].legend(labels=['Daily Mean', '90% Confidence', 'Mean of Rolling Averages'])
     axs[currentAxis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
     currentAxis += 1
+    cur_progress += 1
+    printProgress(cur_progress, max_progress)
 
     axs.append(figAnnually.add_subplot(gs[2, :]))   # add plot over full line
     # Plot annual residual prices with confidence band
@@ -153,6 +176,8 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].legend(labels=['Daily Mean', '90% Confidence', 'Mean of Rolling Averages'])
     axs[currentAxis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
     currentAxis += 1
+    cur_progress += 1
+    printProgress(cur_progress, max_progress)
 
     axs.append(figAnnually.add_subplot(gs[3, 0]))
     # Plot quarterly seasonal prices
@@ -160,6 +185,8 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].set_ylabel('USD')
     axs[currentAxis].set_title(f'Quarterly')
     currentAxis += 1
+    cur_progress += 1
+    printProgress(cur_progress, max_progress)
 
     axs.append(figAnnually.add_subplot(gs[3, 1:]))
     # Plot monthly seasonal prices
@@ -167,6 +194,8 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].set_ylabel('USD')
     axs[currentAxis].set_title(f'Monthly')
     currentAxis += 1
+    cur_progress += 1
+    printProgress(cur_progress, max_progress)
 
     axs.append(figAnnually.add_subplot(gs[4, :-1]))
     # Plot weekly seasonal prices
@@ -175,6 +204,8 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].set_title(f'Weekly')
     axs[currentAxis].tick_params(axis='x', labelsize=4)
     currentAxis += 1
+    cur_progress += 1
+    printProgress(cur_progress, max_progress)
 
     axs.append(figAnnually.add_subplot(gs[4, 2]))
     # Plot weekdaily seasonal prices
@@ -182,6 +213,8 @@ with PdfPages('myplots.pdf') as pdf:
     axs[currentAxis].set_ylabel('USD')
     axs[currentAxis].set_title(f'Weekdaily')
     currentAxis += 1
+    cur_progress += 1
+    printProgress(cur_progress, max_progress)
 
     pdf.savefig(figAnnually, facecolor='w')
 
