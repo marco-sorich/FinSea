@@ -41,7 +41,13 @@ def printProgress(current: int, total: int) -> None:
     """ Prints the progress of the analysis """
     progress = (current + 1) / total
     print("\r[%-20s] %d%%" % ('=' * int(20 * progress), 100 * progress), end='')
-    # print(f'\r{current}/{total} ({current/total*100:.2f}%)', end='')
+    if current == total-1:
+        print()
+
+
+def pdfLayout(figure: plt.Figure) -> None:
+    """ Layouts the figure for PDF export """
+    figure.subplots_adjust(top=0.85, bottom=0.15, left=0.1, hspace=0.7, wspace=0.7)
 
 
 max_progress = 12
@@ -65,14 +71,8 @@ rolling_narrow_resolution = 50
 rolling_wide_resolution = 200
 
 
-# configure theme and style
-sns.set_theme('paper')
-sns.set_style('darkgrid')
-
-
-def pdfLayout(figure: plt.Figure) -> None:
-    """ Layouts the figure for PDF export """
-    figure.subplots_adjust(top=0.85, bottom=0.15, left=0.1, hspace=0.7, wspace=0.7)
+# configure graphical apperance of plots
+sns.set_theme(context='paper', font_scale=0.8, rc={'figure.figsize': (fig_width / 25.4, fig_height / 25.4)}, style='darkgrid')
 
 
 # Create new PDF file
@@ -80,7 +80,7 @@ with PdfPages('myplots.pdf') as pdf:
 
     # first page - plot overall analysis
     numSubPlots = 3
-    figOverall, axs = plt.subplots(numSubPlots, 1, figsize=(fig_width/25.4, fig_height/25.4))
+    figOverall, axs = plt.subplots(numSubPlots, 1)
     pdfLayout(figOverall)
     figOverall.suptitle(f'Overall analysis of {analyzer.ticker.info["longName"]}\n', fontsize=20)
 
@@ -126,10 +126,9 @@ with PdfPages('myplots.pdf') as pdf:
     axs = []
     numSubPlots = 5
 
-    figAnnually = plt.figure(figsize=(fig_width/25.4, fig_height/25.4))
+    figAnnually = plt.figure()
     pdfLayout(figAnnually)
     gs = GridSpec(5, 3, figure=figAnnually)
-    sns.set_theme('paper')
     figAnnually.suptitle(f'Annual analysis of {analyzer.ticker.info["longName"]}\nof last {analyzer.rangeNumOfYears} years\n', fontsize=20)
 
     currentAxis = 0
