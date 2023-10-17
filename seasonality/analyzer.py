@@ -119,7 +119,7 @@ class Analyzer:
         range_num_of_years: int
         Number of years from range_max_yrs
 
-        
+
 
 
         Full history data that was available for download:
@@ -127,9 +127,9 @@ class Analyzer:
         df: pd.DataFrame
         Original history data as it is downloaded. This is not cropped to given range of years.
 
-        
 
-        
+
+
         Decomposed data spanning over `range_num_of_years` years (leapdays cropped):
 
         sasonalDecompDf: pd.DataFrame
@@ -141,7 +141,7 @@ class Analyzer:
         resid_decomp_df: pd.DataFrame
         Residual values which is neither trend nor seasonality.
 
-        
+
 
         Annual data over one full year, each year of 'range_num_of_years' is in a separate column:
 
@@ -154,7 +154,7 @@ class Analyzer:
         annunal_resid_decomp_df: pd.DataFrame
         Decomposed annual daily residual values.
 
-        
+
 
         Same data over different other timeframes:
 

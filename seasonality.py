@@ -14,7 +14,6 @@ import pandas as pd
 import seaborn as sns
 
 
-
 # select the symbol to analyze
 
 # symbol = '2B7K.DE'    # iShares MSCI World SRI UCITS ETF EUR (Acc)
@@ -41,7 +40,7 @@ def print_progress(current: int, total: int) -> None:
     """ Prints the progress of the analysis """
     progress = (current + 1) / total
     print("\r[%-20s] %d%%" % ('=' * int(20 * progress), 100 * progress), end='')
-    if current == total-1:
+    if current == total - 1:
         print()
 
 
@@ -59,7 +58,6 @@ analyzer.calc()
 
 cur_progress += 1
 print_progress(cur_progress, max_progress)
-
 
 
 # Set the figure size to DIN A4 dimensions with a 10mm border
@@ -90,7 +88,7 @@ with PdfPages('myplots.pdf') as pdf:
     overall_df = pd.DataFrame(data=analyzer.df)
     overall_df[f'{rolling_wide_resolution} days rolling average'] = overall_df['Close'].rolling(rolling_wide_resolution).mean()
     overall_df[f'{rolling_narrow_resolution} days rolling average'] = overall_df['Close'].rolling(rolling_narrow_resolution).mean()
-    overall_df.rename(columns={'Close':'Daily closing price'}, inplace=True)
+    overall_df.rename(columns={'Close': 'Daily closing price'}, inplace=True)
     overall_df = overall_df[analyzer.range_max_yrs.min():pd.to_datetime('today')]
     sns.lineplot(data=overall_df, dashes=False, ax=axs[current_axis], legend='full')
     axs[current_axis].set_title(f'Daily close prices of last {analyzer.range_num_of_years} years')
@@ -141,7 +139,7 @@ with PdfPages('myplots.pdf') as pdf:
     axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
     axs[current_axis].set_ylabel('USD')
     axs[current_axis].set_xlabel('Date')
-    axs[current_axis].set_title(f'annually closing prices')
+    axs[current_axis].set_title('annually closing prices')
     axs[current_axis].legend(labels=['Daily Mean', '90% Confidence', 'Mean of Rolling Averages'])
     axs[current_axis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
     current_axis += 1
@@ -156,7 +154,7 @@ with PdfPages('myplots.pdf') as pdf:
     axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
     axs[current_axis].set_ylabel('USD')
     axs[current_axis].set_xlabel('Date')
-    axs[current_axis].set_title(f'annually seasonal price changes')
+    axs[current_axis].set_title('annually seasonal price changes')
     axs[current_axis].legend(labels=['Daily Mean', '90% Confidence', 'Mean of Rolling Averages'])
     axs[current_axis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
     current_axis += 1
@@ -171,7 +169,7 @@ with PdfPages('myplots.pdf') as pdf:
     axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
     axs[current_axis].set_ylabel('USD')
     axs[current_axis].set_xlabel('Date')
-    axs[current_axis].set_title(f'Annually non-seasonal price changes')
+    axs[current_axis].set_title('Annually non-seasonal price changes')
     axs[current_axis].legend(labels=['Daily Mean', '90% Confidence', 'Mean of Rolling Averages'])
     axs[current_axis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
     current_axis += 1
@@ -182,7 +180,7 @@ with PdfPages('myplots.pdf') as pdf:
     # Plot quarterly seasonal prices
     sns.boxplot(data=analyzer.quarterly_seasonal_decomp_df, x='Quarter', y='value', ax=axs[current_axis])
     axs[current_axis].set_ylabel('USD')
-    axs[current_axis].set_title(f'Quarterly')
+    axs[current_axis].set_title('Quarterly')
     current_axis += 1
     cur_progress += 1
     print_progress(cur_progress, max_progress)
@@ -191,7 +189,7 @@ with PdfPages('myplots.pdf') as pdf:
     # Plot monthly seasonal prices
     sns.boxplot(data=analyzer.monthly_seasonal_decomp_df, x='Month', y='value', ax=axs[current_axis])
     axs[current_axis].set_ylabel('USD')
-    axs[current_axis].set_title(f'Monthly')
+    axs[current_axis].set_title('Monthly')
     current_axis += 1
     cur_progress += 1
     print_progress(cur_progress, max_progress)
@@ -200,7 +198,7 @@ with PdfPages('myplots.pdf') as pdf:
     # Plot weekly seasonal prices
     sns.boxplot(data=analyzer.weekly_seasonal_decomp_df, x='Week', y='value', ax=axs[current_axis])
     axs[current_axis].set_ylabel('USD')
-    axs[current_axis].set_title(f'Weekly')
+    axs[current_axis].set_title('Weekly')
     axs[current_axis].tick_params(axis='x', labelsize=4)
     current_axis += 1
     cur_progress += 1
@@ -210,7 +208,7 @@ with PdfPages('myplots.pdf') as pdf:
     # Plot weekdaily seasonal prices
     sns.boxplot(data=analyzer.weekdaily_seasonal_decomp_df, x='Weekday', y='value', ax=axs[current_axis])
     axs[current_axis].set_ylabel('USD')
-    axs[current_axis].set_title(f'Weekdaily')
+    axs[current_axis].set_title('Weekdaily')
     current_axis += 1
     cur_progress += 1
     print_progress(cur_progress, max_progress)
