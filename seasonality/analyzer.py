@@ -30,14 +30,14 @@ class CachedLimiterSession(CacheMixin, LimiterMixin, Session):
 
 
 # Prepare new dataframe in long form for annual data distribution
-def _dfToLongForm(
-        inputDf: pd.DataFrame,
+def _df_to_long_form(
+        input_df: pd.DataFrame,
         range: pd.date_range,
         freq: str = 'd',
-        colName: str = 'Day',
-        colContent: str = '%m-%d',
-        withFill: bool = True,
-        dropLeap: bool = True):
+        col_name: str = 'Day',
+        col_content: str = '%m-%d',
+        with_fill: bool = True,
+        drop_leap: bool = True):
 
     """Normalizes given dataframe to a new long form dataframe over one year.
 
@@ -47,7 +47,7 @@ def _dfToLongForm(
 
     Parameters:
     -----------
-        inputDf: pd.DataFrame
+        input_df: pd.DataFrame
         Input dataframe with data spanning over several years
 
         range: pd.date_range
@@ -56,33 +56,33 @@ def _dfToLongForm(
         freq: str, optional
         Target frequency of the new dataframe in pandas `asfreq` format (default is 'd' for day)
 
-        colName: str, optional
+        col_name: str, optional
         Name of the 'freq' column in the new target dataframe (default is 'Day')
 
-        colContent: str, optional
+        col_content: str, optional
         Content of the column according to `strftime` conversion format (default is '%m-%d' for "<MM>-<DD>")
 
-        withFill: bool, optional
+        with_fill: bool, optional
         Should missing values be filled with `fillna` (default is True)
 
-        dropLeap: bool, optional
+        drop_leap: bool, optional
         Should leap days be dropped (default is True)
     """
 
     # Create new dataframe
-    longDf = pd.DataFrame(data=inputDf)
+    longDf = pd.DataFrame(data=input_df)
 
     # set correct frequency for better comparison
     longDf = longDf.asfreq(freq)
 
     # fill up missing values for better comparison
-    longDf = longDf.fillna(method='ffill') if withFill else longDf
+    longDf = longDf.fillna(method='ffill') if with_fill else longDf
 
     # Drop Feb. 29th of leap years for better comparison
-    longDf = longDf[~((longDf.index.month == 2) & (longDf.index.day == 29))] if dropLeap else longDf
+    longDf = longDf[~((longDf.index.month == 2) & (longDf.index.day == 29))] if drop_leap else longDf
 
     # Create year and month columns
-    longDf['Year'], longDf[colName] = longDf.index.year, longDf.index.strftime(colContent)
+    longDf['Year'], longDf[col_name] = longDf.index.year, longDf.index.strftime(col_content)
 
     # crop dataframe to last full years
     longDf = longDf[range.min():range.max()]
@@ -113,11 +113,11 @@ class Analyzer:
         ticker: yf.Ticker
         Static information about selected symbol.
 
-        rangeMaxYrs: pd.date_range
+        range_max_yrs: pd.date_range
         Actual range of years. Might be identical of value given by constructor or less, if less data is available only.
 
-        rangeNumOfYears: int
-        Number of years from rangeMaxYrs
+        range_num_of_years: int
+        Number of years from range_max_yrs
 
         
 
@@ -130,45 +130,45 @@ class Analyzer:
         
 
         
-        Decomposed data spanning over `rangeNumOfYears` years (leapdays cropped):
+        Decomposed data spanning over `range_num_of_years` years (leapdays cropped):
 
         sasonalDecompDf: pd.DataFrame
         Seasonal values splitted from trend.
 
-        trendDecompDf: pd.DataFrame
+        trend_decomp_df: pd.DataFrame
         Trend values without seasonality.
 
-        residDecompDf: pd.DataFrame
+        resid_decomp_df: pd.DataFrame
         Residual values which is neither trend nor seasonality.
 
         
 
-        Annual data over one full year, each year of 'rangeNumOfYears' is in a separate column:
+        Annual data over one full year, each year of 'range_num_of_years' is in a separate column:
 
-        annualDf: pd.DataFrame
+        annual_df: pd.DataFrame
         Original data over whole year.
 
-        annunalSeasonalDecompDf: pd.DataFrame
+        annunal_seasonal_decomp_df: pd.DataFrame
         Decomposed annual daily seasonal values.
 
-        annunalResidDecompDf: pd.DataFrame
+        annunal_resid_decomp_df: pd.DataFrame
         Decomposed annual daily residual values.
 
         
 
         Same data over different other timeframes:
 
-        quarterlySeasonalDecompDf: pd.DataFrame
-        Decomposed annual quarterly seasonal values over whole year holding `rangeNumOfYears` values per day.
+        quarterly_seasonal_decomp_df: pd.DataFrame
+        Decomposed annual quarterly seasonal values over whole year holding `range_num_of_years` values per day.
 
-        weeklySeasonalDecompDf: pd.DataFrame
-        Decomposed annual weekly seasonal values over whole year holding `rangeNumOfYears` values per day.
+        weekly_seasonal_decomp_df: pd.DataFrame
+        Decomposed annual weekly seasonal values over whole year holding `range_num_of_years` values per day.
 
-        monthlySeasonalDecompDf: pd.DataFrame
-        Decomposed annual monthly seasonal values over whole year holding `rangeNumOfYears` values per day.
+        monthly_seasonal_decomp_df: pd.DataFrame
+        Decomposed annual monthly seasonal values over whole year holding `range_num_of_years` values per day.
 
-        weekdailySeasonalDecompDf: pd.DataFrame
-        Decomposed weekdaily seasonal values over whole year holding `rangeNumOfYears` values per day.
+        weekdaily_seasonal_decomp_df: pd.DataFrame
+        Decomposed weekdaily seasonal values over whole year holding `range_num_of_years` values per day.
     """
 
     def __init__(self, symbol: str, years: dt.datetime, robust: bool = False, annual_rolling_days: int = 200):
@@ -196,25 +196,25 @@ class Analyzer:
     def calc(self):
         """Performs the calculation to fill all the attributes."""
         dirname = '.downloads'
-        historyFilename = f'{dirname}{os.path.sep}{self.symbol}_{dt.date.today()}.csv'
-        cacheFilename = f"{dirname}{os.path.sep}yfinance.cache"
-        pickleFilename = f"{dirname}{os.path.sep}lastAnalysis.pkl"
+        history_filename = f'{dirname}{os.path.sep}{self.symbol}_{dt.date.today()}.csv'
+        cache_filename = f"{dirname}{os.path.sep}yfinance.cache"
+        pickle_filename = f"{dirname}{os.path.sep}lastAnalysis.pkl"
 
         os.makedirs(dirname, exist_ok=True)
 
         session = CachedLimiterSession(
             limiter=Limiter(RequestRate(2, Duration.SECOND * 5),
                             bucket_class=MemoryQueueBucket),
-            backend=SQLiteCache(cacheFilename),
+            backend=SQLiteCache(cache_filename),
         )
         self.ticker = yf.Ticker(self.symbol, session=session)
 
-        if not os.path.isfile(historyFilename):
+        if not os.path.isfile(history_filename):
             yf.pdr_override()  # <== that's all it takes :-)
             self.df = pdr.get_data_yahoo(tickers=[self.symbol], interval="1d")
-            self.df.to_csv(historyFilename)
+            self.df.to_csv(history_filename)
         else:
-            self.df = pd.read_csv(historyFilename, parse_dates=['Date'], index_col=['Date'])
+            self.df = pd.read_csv(history_filename, parse_dates=['Date'], index_col=['Date'])
 
         self.df = self.df[['Close']]
 
@@ -228,53 +228,53 @@ class Analyzer:
         self.df = self.df.fillna(method='ffill')
 
         # prepare range of max 5 years or smaller if dataframe is smaller
-        firstDay = pd.to_datetime(str((self.df.index.year.min() + 1 if ((self.df.index.year.max() - 1) - (self.df.index.year.min() + 1)) < self.years else self.df.index.year.max() - self.years)) + '-01-01')
-        lastDay = pd.to_datetime(str(self.df.index.year.max() - 1) + '-12-31')
-        self.rangeMaxYrs = pd.date_range(firstDay, lastDay, freq='D')
+        first_day = pd.to_datetime(str((self.df.index.year.min() + 1 if ((self.df.index.year.max() - 1) - (self.df.index.year.min() + 1)) < self.years else self.df.index.year.max() - self.years)) + '-01-01')
+        last_day = pd.to_datetime(str(self.df.index.year.max() - 1) + '-12-31')
+        self.range_max_yrs = pd.date_range(first_day, last_day, freq='D')
 
         # get actual number of calculated years for dataframe
-        self.rangeNumOfYears = self.rangeMaxYrs.max().year - self.rangeMaxYrs.min().year + 1
+        self.range_num_of_years = self.range_max_yrs.max().year - self.range_max_yrs.min().year + 1
 
         # save information for backtrader
-        backtestInfo = {
-            'historyFilename': historyFilename,
-            'self.rangeMaxYrs': self.rangeMaxYrs,
+        backtest_info = {
+            'history_filename': history_filename,
+            'self.range_max_yrs': self.range_max_yrs,
         }
-        pickle.dump(backtestInfo, open(pickleFilename, 'wb'))
+        pickle.dump(backtest_info, open(pickle_filename, 'wb'))
 
-        self.annualDf = _dfToLongForm(self.df.assign(**{'rolling average': self.df['Close'].rolling(self.annual_rolling_days).mean()}), self.rangeMaxYrs)
+        self.annual_df = _df_to_long_form(self.df.assign(**{'rolling average': self.df['Close'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
 
         # set to multiindex: 1st level 'Day', 2nd level 'Year'
-        self.annualDf = self.annualDf.set_index(['Year', 'Day'])
+        self.annual_df = self.annual_df.set_index(['Year', 'Day'])
 
         # reorder by index level 'Day'
-        self.annualDf = self.annualDf.sort_index(level='Year')
+        self.annual_df = self.annual_df.sort_index(level='Year')
 
-        decompDf = pd.DataFrame(data=self.df)
+        decomp_df = pd.DataFrame(data=self.df)
 
         # crop dataframe to max 5 last full years
-        decompDf = decompDf[self.rangeMaxYrs.min():pd.to_datetime('today')]
+        decomp_df = decomp_df[self.range_max_yrs.min():pd.to_datetime('today')]
 
         # prepare the 3 dataframes for seasonal, trend and residual
-        self.seasonalDecompDf = pd.DataFrame()
-        self.trendDecompDf = pd.DataFrame()
-        self.residDecompDf = pd.DataFrame()
+        self.seasonal_decomp_df = pd.DataFrame()
+        self.trend_decomp_df = pd.DataFrame()
+        self.resid_decomp_df = pd.DataFrame()
 
         # simplest form of STL
-        decomposeSimpleStl = STL(decompDf['Close'], period=365, robust=self.robust)
-        decomposeSimpleRes = decomposeSimpleStl.fit()
+        decompose_simple_stl = STL(decomp_df['Close'], period=365, robust=self.robust)
+        decompose_simple_res = decompose_simple_stl.fit()
 
-        self.seasonalDecompDf['value'] = decomposeSimpleRes.seasonal
-        self.trendDecompDf['value'] = decomposeSimpleRes.trend
-        self.residDecompDf['value'] = decomposeSimpleRes.resid
+        self.seasonal_decomp_df['value'] = decompose_simple_res.seasonal
+        self.trend_decomp_df['value'] = decompose_simple_res.trend
+        self.resid_decomp_df['value'] = decompose_simple_res.resid
 
         # prepare annual dataframes with multiindex including the rolling averages
-        self.annunalSeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf.assign(**{'rolling average': self.seasonalDecompDf['value'].rolling(self.annual_rolling_days).mean()}), self.rangeMaxYrs)
-        # annunalTrendDecompDf = _dfToLongForm(self.trendDecompDf.assign(**{'rolling average': self.trendDecompDf['value'].rolling(self.annual_rolling_days).mean()}), self.rangeMaxYrs)
-        self.annunalResidDecompDf = _dfToLongForm(self.residDecompDf.assign(**{'rolling average': self.residDecompDf['value'].rolling(self.annual_rolling_days).mean()}), self.rangeMaxYrs)
+        self.annunal_seasonal_decomp_df = _df_to_long_form(self.seasonal_decomp_df.assign(**{'rolling average': self.seasonal_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
+        # annunalTrendDecompDf = _df_to_long_form(self.trend_decomp_df.assign(**{'rolling average': self.trend_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
+        self.annunal_resid_decomp_df = _df_to_long_form(self.resid_decomp_df.assign(**{'rolling average': self.resid_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
 
         # prepare other dataframes for categorial plots
-        self.monthlySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf.resample('M').mean(), self.rangeMaxYrs, freq='M', colName='Month', colContent='%b', withFill=False, dropLeap=False)
-        self.weekdailySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf, self.rangeMaxYrs, freq='B', colName='Weekday', colContent='%a', withFill=False, dropLeap=False)
-        self.quarterlySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf.resample('Q').mean(), self.rangeMaxYrs, freq='Q', colName='Quarter', colContent='%b', withFill=False, dropLeap=False)
-        self.weeklySeasonalDecompDf = _dfToLongForm(self.seasonalDecompDf.resample('W').mean(), self.rangeMaxYrs, freq='W', colName='Week', colContent='%V', withFill=False, dropLeap=False)
+        self.monthly_seasonal_decomp_df = _df_to_long_form(self.seasonal_decomp_df.resample('M').mean(), self.range_max_yrs, freq='M', col_name='Month', col_content='%b', with_fill=False, drop_leap=False)
+        self.weekdaily_seasonal_decomp_df = _df_to_long_form(self.seasonal_decomp_df, self.range_max_yrs, freq='B', col_name='Weekday', col_content='%a', with_fill=False, drop_leap=False)
+        self.quarterly_seasonal_decomp_df = _df_to_long_form(self.seasonal_decomp_df.resample('Q').mean(), self.range_max_yrs, freq='Q', col_name='Quarter', col_content='%b', with_fill=False, drop_leap=False)
+        self.weekly_seasonal_decomp_df = _df_to_long_form(self.seasonal_decomp_df.resample('W').mean(), self.range_max_yrs, freq='W', col_name='Week', col_content='%V', with_fill=False, drop_leap=False)
