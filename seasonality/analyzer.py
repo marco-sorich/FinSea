@@ -29,8 +29,8 @@ class CachedLimiterSession(CacheMixin, LimiterMixin, Session):
     pass
 
 
-# Prepare new dataframe in long form for annual data distribution
-def _df_to_long_form(
+# Prepare new dataframe in wide form for annual data distribution
+def _df_to_wide_form(
         input_df: pd.DataFrame,
         range: pd.date_range,
         freq: str = 'd',
@@ -39,7 +39,7 @@ def _df_to_long_form(
         with_fill: bool = True,
         drop_leap: bool = True):
 
-    """Normalizes given dataframe to a new long form dataframe over one year.
+    """Normalizes given dataframe to a new wide form dataframe over one year.
 
     This routine takes a dataframe with expected data over several years and
     creates a new target dataframe with over one year with multiple values
@@ -70,30 +70,30 @@ def _df_to_long_form(
     """
 
     # Create new dataframe
-    longDf = pd.DataFrame(data=input_df)
+    wideDf = pd.DataFrame(data=input_df)
 
     # set correct frequency for better comparison
-    longDf = longDf.asfreq(freq)
+    wideDf = wideDf.asfreq(freq)
 
     # fill up missing values for better comparison
-    longDf = longDf.fillna(method='ffill') if with_fill else longDf
+    wideDf = wideDf.fillna(method='ffill') if with_fill else wideDf
 
     # Drop Feb. 29th of leap years for better comparison
-    longDf = longDf[~((longDf.index.month == 2) & (longDf.index.day == 29))] if drop_leap else longDf
+    wideDf = wideDf[~((wideDf.index.month == 2) & (wideDf.index.day == 29))] if drop_leap else wideDf
 
     # Create year and month columns
-    longDf['Year'], longDf[col_name] = longDf.index.year, longDf.index.strftime(col_content)
+    wideDf['Year'], wideDf[col_name] = wideDf.index.year, wideDf.index.strftime(col_content)
 
     # crop dataframe to last full years
-    longDf = longDf[range.min():range.max()]
+    wideDf = wideDf[range.min():range.max()]
 
     # remove date index and return to numbered index
-    longDf = longDf.reset_index()
+    wideDf = wideDf.reset_index()
 
     # remove date column which was left over from removing date index
-    longDf = longDf.drop('Date', axis=1)
+    wideDf = wideDf.drop('Date', axis=1)
 
-    return longDf
+    return wideDf
 
 
 class Analyzer:
@@ -173,7 +173,7 @@ class Analyzer:
             Use robust or simple STL decomposition (default is simple)
 
             annual_rolling_days: int, optional
-            Number of days for integrated rolling mean for annual daily long form data
+            Number of days for integrated rolling mean for annual daily wide form data
         """
         self.symbol = symbol
         self.years = years
@@ -234,7 +234,7 @@ class Analyzer:
         }
         pickle.dump(backtest_info, open(pickle_filename, 'wb'))
 
-        self.__annual_df = _df_to_long_form(self.__df.assign(**{'rolling average': self.__df['Close'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
+        self.__annual_df = _df_to_wide_form(self.__df.assign(**{'rolling average': self.__df['Close'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
 
         # set to multiindex: 1st level 'Day', 2nd level 'Year'
         self.__annual_df = self.__annual_df.set_index(['Year', 'Day'])
@@ -270,31 +270,35 @@ class Analyzer:
         return self.__resid_decomp_df
 
     def get_annual(self) -> pd.DataFrame:
-        """Returns the original annual dataframe converted to long form."""
+        """Returns the original annual dataframe converted to wide form."""
         return self.__annual_df
 
     def get_annual_seasonal(self) -> pd.DataFrame:
-        """Returns the decomposed annual daily seasonal dataframe including rolling average in long form."""
+        """Returns the decomposed annual daily seasonal dataframe including rolling average in wide form."""
         # prepare annual dataframes with multiindex including the rolling average
-        return _df_to_long_form(self.__seasonal_decomp_df.assign(**{'rolling average': self.__seasonal_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
+        return _df_to_wide_form(self.__seasonal_decomp_df.assign(**{'rolling average': self.__seasonal_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
 
     def get_annual_residual(self) -> pd.DataFrame:
-        """Returns the decomposed annual daily residual dataframe including rolling average in long form."""
-        # annunalTrendDecompDf = _df_to_long_form(self.__trend_decomp_df.assign(**{'rolling average': self.__trend_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
-        return _df_to_long_form(self.__resid_decomp_df.assign(**{'rolling average': self.__resid_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
+        """Returns the decomposed annual daily residual dataframe including rolling average in wide form."""
+        # prepare annual dataframes with multiindex including the rolling average
+        return _df_to_wide_form(self.__resid_decomp_df.assign(**{'rolling average': self.__resid_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
 
     def get_monthly_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed annual monthly seasonal dataframe."""
-        return _df_to_long_form(self.__seasonal_decomp_df.resample('M').mean(), self.range_max_yrs, freq='M', col_name='Month', col_content='%b', with_fill=False, drop_leap=False)
+        # prepare annual dataframes with multiindex including the rolling average
+        return _df_to_wide_form(self.__seasonal_decomp_df.resample('M').mean(), self.range_max_yrs, freq='M', col_name='Month', col_content='%b', with_fill=False, drop_leap=False)
 
     def get_weekdaily_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed weekdaily seasonal dataframe."""
-        return _df_to_long_form(self.__seasonal_decomp_df, self.range_max_yrs, freq='B', col_name='Weekday', col_content='%a', with_fill=False, drop_leap=False)
+        # prepare annual dataframes with multiindex including the rolling average
+        return _df_to_wide_form(self.__seasonal_decomp_df, self.range_max_yrs, freq='B', col_name='Weekday', col_content='%a', with_fill=False, drop_leap=False)
 
     def get_quarterly_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed annual quarterly seasonal dataframe."""
-        return _df_to_long_form(self.__seasonal_decomp_df.resample('Q').mean(), self.range_max_yrs, freq='Q', col_name='Quarter', col_content='%b', with_fill=False, drop_leap=False)
+        # prepare annual dataframes with multiindex including the rolling average
+        return _df_to_wide_form(self.__seasonal_decomp_df.resample('Q').mean(), self.range_max_yrs, freq='Q', col_name='Quarter', col_content='%b', with_fill=False, drop_leap=False)
 
     def get_weekly_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed annual weekly seasonal dataframe."""
-        return _df_to_long_form(self.__seasonal_decomp_df.resample('W').mean(), self.range_max_yrs, freq='W', col_name='Week', col_content='%V', with_fill=False, drop_leap=False)
+        # prepare annual dataframes with multiindex including the rolling average
+        return _df_to_wide_form(self.__seasonal_decomp_df.resample('W').mean(), self.range_max_yrs, freq='W', col_name='Week', col_content='%V', with_fill=False, drop_leap=False)
