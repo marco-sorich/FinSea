@@ -124,54 +124,41 @@ class Analyzer:
 
         Full history data that was available for download:
 
-        df: pd.DataFrame
+        __df: pd.DataFrame
         Original history data as it is downloaded. This is not cropped to given range of years.
 
 
 
 
-        Decomposed data spanning over `range_num_of_years` years (leapdays cropped):
-
-        sasonalDecompDf: pd.DataFrame
-        Seasonal values splitted from trend.
-
-        trend_decomp_df: pd.DataFrame
-        Trend values without seasonality.
-
-        resid_decomp_df: pd.DataFrame
-        Residual values which is neither trend nor seasonality.
-
-
-
         Annual data over one full year, each year of 'range_num_of_years' is in a separate column:
 
-        annual_df: pd.DataFrame
+        __annual_df: pd.DataFrame
         Original data over whole year.
 
-        annunal_seasonal_decomp_df: pd.DataFrame
+        __annunal_seasonal_decomp_df: pd.DataFrame
         Decomposed annual daily seasonal values.
 
-        annunal_resid_decomp_df: pd.DataFrame
+        __annunal_resid_decomp_df: pd.DataFrame
         Decomposed annual daily residual values.
 
 
 
         Same data over different other timeframes:
 
-        quarterly_seasonal_decomp_df: pd.DataFrame
+        __quarterly_seasonal_decomp_df: pd.DataFrame
         Decomposed annual quarterly seasonal values over whole year holding `range_num_of_years` values per day.
 
-        weekly_seasonal_decomp_df: pd.DataFrame
+        __weekly_seasonal_decomp_df: pd.DataFrame
         Decomposed annual weekly seasonal values over whole year holding `range_num_of_years` values per day.
 
-        monthly_seasonal_decomp_df: pd.DataFrame
+        __monthly_seasonal_decomp_df: pd.DataFrame
         Decomposed annual monthly seasonal values over whole year holding `range_num_of_years` values per day.
 
-        weekdaily_seasonal_decomp_df: pd.DataFrame
+        __weekdaily_seasonal_decomp_df: pd.DataFrame
         Decomposed weekdaily seasonal values over whole year holding `range_num_of_years` values per day.
     """
 
-    def __init__(self, symbol: str, years: dt.datetime, robust: bool = False, annual_rolling_days: int = 200):
+    def __init__(self, symbol: str, years: dt.datetime, robust: bool = False, annual_rolling_days: int = 30):
         """Constructor
 
         Parameters:
@@ -192,6 +179,11 @@ class Analyzer:
         self.years = years
         self.robust = robust
         self.annual_rolling_days = annual_rolling_days
+        self.__df = pd.DataFrame()
+        self.__seasonal_decomp_df = pd.DataFrame()
+        self.__trend_decomp_df = pd.DataFrame()
+        self.__resid_decomp_df = pd.DataFrame()
+        self.__annual_df = pd.DataFrame()
 
     def calc(self):
         """Performs the calculation to fill all the attributes."""
@@ -211,25 +203,25 @@ class Analyzer:
 
         if not os.path.isfile(history_filename):
             yf.pdr_override()  # <== that's all it takes :-)
-            self.df = pdr.get_data_yahoo(tickers=[self.symbol], interval="1d")
-            self.df.to_csv(history_filename)
+            self.__df = pdr.get_data_yahoo(tickers=[self.symbol], interval="1d")
+            self.__df.to_csv(history_filename)
         else:
-            self.df = pd.read_csv(history_filename, parse_dates=['Date'], index_col=['Date'])
+            self.__df = pd.read_csv(history_filename, parse_dates=['Date'], index_col=['Date'])
 
-        self.df = self.df[['Close']]
+        self.__df = self.__df[['Close']]
 
         # for (k, v) in ticker.info.items():
         #    D(f'* {k}: {v}')
 
         # set correct frequency
-        self.df = self.df.asfreq('B')
+        self.__df = self.__df.asfreq('B')
 
         # fill up missing values
-        self.df = self.df.fillna(method='ffill')
+        self.__df = self.__df.fillna(method='ffill')
 
         # prepare range of max 5 years or smaller if dataframe is smaller
-        first_day = pd.to_datetime(str((self.df.index.year.min() + 1 if ((self.df.index.year.max() - 1) - (self.df.index.year.min() + 1)) < self.years else self.df.index.year.max() - self.years)) + '-01-01')
-        last_day = pd.to_datetime(str(self.df.index.year.max() - 1) + '-12-31')
+        first_day = pd.to_datetime(str((self.__df.index.year.min() + 1 if ((self.__df.index.year.max() - 1) - (self.__df.index.year.min() + 1)) < self.years else self.__df.index.year.max() - self.years)) + '-01-01')
+        last_day = pd.to_datetime(str(self.__df.index.year.max() - 1) + '-12-31')
         self.range_max_yrs = pd.date_range(first_day, last_day, freq='D')
 
         # get actual number of calculated years for dataframe
@@ -242,39 +234,67 @@ class Analyzer:
         }
         pickle.dump(backtest_info, open(pickle_filename, 'wb'))
 
-        self.annual_df = _df_to_long_form(self.df.assign(**{'rolling average': self.df['Close'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
+        self.__annual_df = _df_to_long_form(self.__df.assign(**{'rolling average': self.__df['Close'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
 
         # set to multiindex: 1st level 'Day', 2nd level 'Year'
-        self.annual_df = self.annual_df.set_index(['Year', 'Day'])
+        self.__annual_df = self.__annual_df.set_index(['Year', 'Day'])
 
         # reorder by index level 'Day'
-        self.annual_df = self.annual_df.sort_index(level='Year')
+        self.__annual_df = self.__annual_df.sort_index(level='Year')
 
-        decomp_df = pd.DataFrame(data=self.df)
+        decomp_df = pd.DataFrame(data=self.__df)
 
         # crop dataframe to max 5 last full years
         decomp_df = decomp_df[self.range_max_yrs.min():pd.to_datetime('today')]
 
-        # prepare the 3 dataframes for seasonal, trend and residual
-        self.seasonal_decomp_df = pd.DataFrame()
-        self.trend_decomp_df = pd.DataFrame()
-        self.resid_decomp_df = pd.DataFrame()
+        # decompose seasonal trend and residual via LOESS regression
+        decompose_result = STL(decomp_df['Close'], period=365, robust=self.robust, seasonal=7, seasonal_deg=1, trend_deg=1, low_pass_deg=1, seasonal_jump=1, trend_jump=1, low_pass_jump=1).fit()
+        self.__seasonal_decomp_df['value'] = decompose_result.seasonal
+        self.__trend_decomp_df['value'] = decompose_result.trend
+        self.__resid_decomp_df['value'] = decompose_result.resid
 
-        # simplest form of STL
-        decompose_simple_stl = STL(decomp_df['Close'], period=365, robust=self.robust)
-        decompose_simple_res = decompose_simple_stl.fit()
+    def get_original(self) -> pd.DataFrame:
+        """Returns the original dataframe as downloaded from internet."""
+        return self.__df
 
-        self.seasonal_decomp_df['value'] = decompose_simple_res.seasonal
-        self.trend_decomp_df['value'] = decompose_simple_res.trend
-        self.resid_decomp_df['value'] = decompose_simple_res.resid
+    def get_trend(self) -> pd.DataFrame:
+        """Returns the decomposed trend dataframe right out of the STL fit() function."""
+        return self.__trend_decomp_df
 
-        # prepare annual dataframes with multiindex including the rolling averages
-        self.annunal_seasonal_decomp_df = _df_to_long_form(self.seasonal_decomp_df.assign(**{'rolling average': self.seasonal_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
-        # annunalTrendDecompDf = _df_to_long_form(self.trend_decomp_df.assign(**{'rolling average': self.trend_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
-        self.annunal_resid_decomp_df = _df_to_long_form(self.resid_decomp_df.assign(**{'rolling average': self.resid_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
+    def get_seasonal(self) -> pd.DataFrame:
+        """Returns the decomposed seasonal dataframe right out of the STL fit() function."""
+        return self.__seasonal_decomp_df
 
-        # prepare other dataframes for categorial plots
-        self.monthly_seasonal_decomp_df = _df_to_long_form(self.seasonal_decomp_df.resample('M').mean(), self.range_max_yrs, freq='M', col_name='Month', col_content='%b', with_fill=False, drop_leap=False)
-        self.weekdaily_seasonal_decomp_df = _df_to_long_form(self.seasonal_decomp_df, self.range_max_yrs, freq='B', col_name='Weekday', col_content='%a', with_fill=False, drop_leap=False)
-        self.quarterly_seasonal_decomp_df = _df_to_long_form(self.seasonal_decomp_df.resample('Q').mean(), self.range_max_yrs, freq='Q', col_name='Quarter', col_content='%b', with_fill=False, drop_leap=False)
-        self.weekly_seasonal_decomp_df = _df_to_long_form(self.seasonal_decomp_df.resample('W').mean(), self.range_max_yrs, freq='W', col_name='Week', col_content='%V', with_fill=False, drop_leap=False)
+    def get_residual(self) -> pd.DataFrame:
+        """Returns the decomposed residual dataframe right out of the STL fit() function."""
+        return self.__resid_decomp_df
+
+    def get_annual(self) -> pd.DataFrame:
+        """Returns the original annual dataframe converted to long form."""
+        return self.__annual_df
+
+    def get_annual_seasonal(self) -> pd.DataFrame:
+        """Returns the decomposed annual daily seasonal dataframe including rolling average in long form."""
+        # prepare annual dataframes with multiindex including the rolling average
+        return _df_to_long_form(self.__seasonal_decomp_df.assign(**{'rolling average': self.__seasonal_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
+
+    def get_annual_residual(self) -> pd.DataFrame:
+        """Returns the decomposed annual daily residual dataframe including rolling average in long form."""
+        # annunalTrendDecompDf = _df_to_long_form(self.__trend_decomp_df.assign(**{'rolling average': self.__trend_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
+        return _df_to_long_form(self.__resid_decomp_df.assign(**{'rolling average': self.__resid_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
+
+    def get_monthly_seasonal(self) -> pd.DataFrame:
+        """Returns the decomposed annual monthly seasonal dataframe."""
+        return _df_to_long_form(self.__seasonal_decomp_df.resample('M').mean(), self.range_max_yrs, freq='M', col_name='Month', col_content='%b', with_fill=False, drop_leap=False)
+
+    def get_weekdaily_seasonal(self) -> pd.DataFrame:
+        """Returns the decomposed weekdaily seasonal dataframe."""
+        return _df_to_long_form(self.__seasonal_decomp_df, self.range_max_yrs, freq='B', col_name='Weekday', col_content='%a', with_fill=False, drop_leap=False)
+
+    def get_quarterly_seasonal(self) -> pd.DataFrame:
+        """Returns the decomposed annual quarterly seasonal dataframe."""
+        return _df_to_long_form(self.__seasonal_decomp_df.resample('Q').mean(), self.range_max_yrs, freq='Q', col_name='Quarter', col_content='%b', with_fill=False, drop_leap=False)
+
+    def get_weekly_seasonal(self) -> pd.DataFrame:
+        """Returns the decomposed annual weekly seasonal dataframe."""
+        return _df_to_long_form(self.__seasonal_decomp_df.resample('W').mean(), self.range_max_yrs, freq='W', col_name='Week', col_content='%V', with_fill=False, drop_leap=False)

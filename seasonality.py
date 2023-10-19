@@ -85,7 +85,7 @@ with PdfPages('myplots.pdf') as pdf:
     current_axis = 0
 
     # Plot overall closing prices of last x years
-    overall_df = pd.DataFrame(data=analyzer.df)
+    overall_df = pd.DataFrame(data=analyzer.get_original())
     overall_df[f'{rolling_wide_resolution} days rolling average'] = overall_df['Close'].rolling(rolling_wide_resolution).mean()
     overall_df[f'{rolling_narrow_resolution} days rolling average'] = overall_df['Close'].rolling(rolling_narrow_resolution).mean()
     overall_df.rename(columns={'Close': 'Daily closing price'}, inplace=True)
@@ -98,9 +98,9 @@ with PdfPages('myplots.pdf') as pdf:
     print_progress(cur_progress, max_progress)
 
     # Plot overall closing prices of last x years with STL trend
-    overall_df = pd.DataFrame(data=analyzer.trend_decomp_df)
+    overall_df = pd.DataFrame(data=analyzer.get_trend())
     overall_df = overall_df[analyzer.range_max_yrs.min():pd.to_datetime('today')]
-    overall_df['Daily closing price'] = analyzer.df[analyzer.range_max_yrs.min():pd.to_datetime('today')]['Close']
+    overall_df['Daily closing price'] = analyzer.get_original()[analyzer.range_max_yrs.min():pd.to_datetime('today')]['Close']
     sns.lineplot(data=overall_df, dashes=False, ax=axs[current_axis], legend='full')
     axs[current_axis].set_title(f'Fitting of daily closing prices to STL trend of last {analyzer.range_num_of_years} years')
     axs[current_axis].set_ylabel(analyzer.ticker.info['currency'])
@@ -109,7 +109,7 @@ with PdfPages('myplots.pdf') as pdf:
     print_progress(cur_progress, max_progress)
 
     # Plot overall STL residual of last x years with STL trend
-    overall_df = pd.DataFrame(data=analyzer.resid_decomp_df)
+    overall_df = pd.DataFrame(data=analyzer.get_residual())
     sns.lineplot(data=overall_df, dashes=False, ax=axs[current_axis], legend='full')
     axs[current_axis].set_title(f'Residual of STL trend of last {analyzer.range_num_of_years} years')
     axs[current_axis].set_ylabel(analyzer.ticker.info['currency'])
@@ -133,8 +133,9 @@ with PdfPages('myplots.pdf') as pdf:
 
     axs.append(fig_annually.add_subplot(gs[0, :]))   # add plot over full line
     # Plot annual closing prices with confidence band
-    sns.lineplot(data=analyzer.annual_df, x='Day', y='Close', ax=axs[current_axis], sort=True)
-    sns.lineplot(data=analyzer.annual_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
+    annual_df = analyzer.get_annual()
+    sns.lineplot(data=annual_df, x='Day', y='Close', ax=axs[current_axis], sort=True)
+    sns.lineplot(data=annual_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
     axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
     axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
     axs[current_axis].set_ylabel('USD')
@@ -148,8 +149,9 @@ with PdfPages('myplots.pdf') as pdf:
 
     axs.append(fig_annually.add_subplot(gs[1, :]))   # add plot over full line
     # Plot annual seasonal prices with confidence band
-    sns.lineplot(data=analyzer.annunal_seasonal_decomp_df, ax=axs[current_axis], x='Day', y='value')
-    sns.lineplot(data=analyzer.annunal_seasonal_decomp_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
+    annunal_seasonal_decomp_df = analyzer.get_annual_seasonal()
+    sns.lineplot(data=annunal_seasonal_decomp_df, ax=axs[current_axis], x='Day', y='value')
+    sns.lineplot(data=annunal_seasonal_decomp_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
     axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
     axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
     axs[current_axis].set_ylabel('USD')
@@ -163,8 +165,9 @@ with PdfPages('myplots.pdf') as pdf:
 
     axs.append(fig_annually.add_subplot(gs[2, :]))   # add plot over full line
     # Plot annual residual prices with confidence band
-    sns.lineplot(data=analyzer.annunal_resid_decomp_df, ax=axs[current_axis], x='Day', y='value')
-    sns.lineplot(data=analyzer.annunal_resid_decomp_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
+    annunal_resid_decomp_df = analyzer.get_annual_residual()
+    sns.lineplot(data=annunal_resid_decomp_df, ax=axs[current_axis], x='Day', y='value')
+    sns.lineplot(data=annunal_resid_decomp_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
     axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
     axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
     axs[current_axis].set_ylabel('USD')
@@ -178,7 +181,7 @@ with PdfPages('myplots.pdf') as pdf:
 
     axs.append(fig_annually.add_subplot(gs[3, 0]))
     # Plot quarterly seasonal prices
-    sns.boxplot(data=analyzer.quarterly_seasonal_decomp_df, x='Quarter', y='value', ax=axs[current_axis])
+    sns.boxplot(data=analyzer.get_quarterly_seasonal(), x='Quarter', y='value', ax=axs[current_axis])
     axs[current_axis].set_ylabel('USD')
     axs[current_axis].set_title('Quarterly')
     current_axis += 1
@@ -187,7 +190,7 @@ with PdfPages('myplots.pdf') as pdf:
 
     axs.append(fig_annually.add_subplot(gs[3, 1:]))
     # Plot monthly seasonal prices
-    sns.boxplot(data=analyzer.monthly_seasonal_decomp_df, x='Month', y='value', ax=axs[current_axis])
+    sns.boxplot(data=analyzer.get_monthly_seasonal(), x='Month', y='value', ax=axs[current_axis])
     axs[current_axis].set_ylabel('USD')
     axs[current_axis].set_title('Monthly')
     current_axis += 1
@@ -196,7 +199,7 @@ with PdfPages('myplots.pdf') as pdf:
 
     axs.append(fig_annually.add_subplot(gs[4, :-1]))
     # Plot weekly seasonal prices
-    sns.boxplot(data=analyzer.weekly_seasonal_decomp_df, x='Week', y='value', ax=axs[current_axis])
+    sns.boxplot(data=analyzer.get_weekly_seasonal(), x='Week', y='value', ax=axs[current_axis])
     axs[current_axis].set_ylabel('USD')
     axs[current_axis].set_title('Weekly')
     axs[current_axis].tick_params(axis='x', labelsize=4)
@@ -206,7 +209,7 @@ with PdfPages('myplots.pdf') as pdf:
 
     axs.append(fig_annually.add_subplot(gs[4, 2]))
     # Plot weekdaily seasonal prices
-    sns.boxplot(data=analyzer.weekdaily_seasonal_decomp_df, x='Weekday', y='value', ax=axs[current_axis])
+    sns.boxplot(data=analyzer.get_weekdaily_seasonal(), x='Weekday', y='value', ax=axs[current_axis])
     axs[current_axis].set_ylabel('USD')
     axs[current_axis].set_title('Weekdaily')
     current_axis += 1
