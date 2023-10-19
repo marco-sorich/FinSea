@@ -118,44 +118,6 @@ class Analyzer:
 
         range_num_of_years: int
         Number of years from range_max_yrs
-
-
-
-
-        Full history data that was available for download:
-
-        __df: pd.DataFrame
-        Original history data as it is downloaded. This is not cropped to given range of years.
-
-
-
-
-        Annual data over one full year, each year of 'range_num_of_years' is in a separate column:
-
-        __annual_df: pd.DataFrame
-        Original data over whole year.
-
-        __annunal_seasonal_decomp_df: pd.DataFrame
-        Decomposed annual daily seasonal values.
-
-        __annunal_resid_decomp_df: pd.DataFrame
-        Decomposed annual daily residual values.
-
-
-
-        Same data over different other timeframes:
-
-        __quarterly_seasonal_decomp_df: pd.DataFrame
-        Decomposed annual quarterly seasonal values over whole year holding `range_num_of_years` values per day.
-
-        __weekly_seasonal_decomp_df: pd.DataFrame
-        Decomposed annual weekly seasonal values over whole year holding `range_num_of_years` values per day.
-
-        __monthly_seasonal_decomp_df: pd.DataFrame
-        Decomposed annual monthly seasonal values over whole year holding `range_num_of_years` values per day.
-
-        __weekdaily_seasonal_decomp_df: pd.DataFrame
-        Decomposed weekdaily seasonal values over whole year holding `range_num_of_years` values per day.
     """
 
     def __init__(self, symbol: str, years: dt.datetime, robust: bool = False, annual_rolling_days: int = 30):
