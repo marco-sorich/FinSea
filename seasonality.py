@@ -1,3 +1,4 @@
+import argparse
 import os
 
 import seasonality as ssn
@@ -25,10 +26,20 @@ symbol = '^GSPC'      # S&P 500
 max_num_of_years = 5
 
 
+parser = argparse.ArgumentParser(description='Seasonality Analyzer')
+parser.add_argument('-s', '--symbol', type=str, default=symbol, help='Ticker symbol to analyze')
+parser.add_argument('-y', '--years', type=int, default=max_num_of_years, help='Maximum number of years to analyze backwards')
+parser.add_argument('-v', '--view', type=str, default='console', help='View to render the results (''console'' or ''pdf'')')
+parser.add_argument('-f', '--file', type=str, default='myPlots.pdf', help='File name to save the results')
+
+
 analyzer = ssn.Analyzer(symbol, max_num_of_years)
 analyzer.calc()
-# analyzer.render(ssn.Views.PDF, 'myPlots.pdf')
-analyzer.render(ssn.Views.CONSOLE)
 
-# Open the PDF file
-#os.system('open myplots.pdf')
+if parser.parse_args().view == 'console':
+    analyzer.render(ssn.Views.CONSOLE)
+elif parser.parse_args().view == 'pdf':
+    analyzer.render(ssn.Views.PDF, 'myPlots.pdf')
+    os.system('open myplots.pdf')
+else:
+    raise ValueError('Unknown view type')
