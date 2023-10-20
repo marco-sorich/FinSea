@@ -1,6 +1,6 @@
 from .model import Model
 from .views.pdfView import PdfView
-from .views.pdfView import Views
+from .views.view import Views
 
 
 class Analyzer:

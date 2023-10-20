@@ -1,5 +1,4 @@
 import datetime as dt
-from enum import Enum
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -10,11 +9,8 @@ import pandas as pd
 
 import seaborn as sns
 
+from .view import View
 from ..model import Model
-
-
-class Views(Enum):
-    PDF = 1
 
 
 def _print_progress(current: int, total: int) -> None:
@@ -30,12 +26,13 @@ def _pdf_layout(figure: plt.Figure) -> None:
     figure.subplots_adjust(top=0.85, bottom=0.15, left=0.1, hspace=0.7, wspace=0.7)
 
 
-class PdfView:
+class PdfView(View):
 
     def __init__(self, model: Model, file_path: str) -> None:
         """ Creates a new PdfView object with the given self.__model and file path """
         self.__model = model
         self.__file_path = file_path
+        super().__init__()
 
     def render(self) -> None:
         """ Creates a PDF file with the analysis results """
