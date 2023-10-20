@@ -17,7 +17,7 @@ class Views(Enum):
     PDF = 1
 
 
-def print_progress(current: int, total: int) -> None:
+def _print_progress(current: int, total: int) -> None:
     """ Prints the progress of the analysis """
     progress = (current + 1) / total
     print("\r[%-20s] %d%%" % ('=' * int(20 * progress), 100 * progress), end='')
@@ -25,7 +25,7 @@ def print_progress(current: int, total: int) -> None:
         print()
 
 
-def pdf_layout(figure: plt.Figure) -> None:
+def _pdf_layout(figure: plt.Figure) -> None:
     """ Layouts the figure for PDF export """
     figure.subplots_adjust(top=0.85, bottom=0.15, left=0.1, hspace=0.7, wspace=0.7)
 
@@ -41,7 +41,7 @@ class PdfView:
         """ Creates a PDF file with the analysis results """
 
         max_progress = 14
-        cur_progress = 0; print_progress(cur_progress, max_progress) # noqa: 702
+        cur_progress = 0; _print_progress(cur_progress, max_progress)  # noqa: 702
 
         # Set the figure size to DIN A4 dimensions with a 10mm border
         fig_width = 210 + 20  # 210mm + 10mm border on each side
@@ -60,7 +60,7 @@ class PdfView:
             # first page - plot overall analysis
             num_subplots = 3
             fig_overall, axs = plt.subplots(num_subplots, 1)
-            pdf_layout(fig_overall)
+            _pdf_layout(fig_overall)
             fig_overall.suptitle(f'Overall analysis of {self.__model.ticker.info["longName"]}\n', fontsize=20)
 
             current_axis = 0
@@ -75,7 +75,7 @@ class PdfView:
             axs[current_axis].set_title(f'Daily close prices of last {self.__model.range_num_of_years} years')
             axs[current_axis].set_ylabel(self.__model.ticker.info['currency'])
             current_axis += 1
-            cur_progress += 1; print_progress(cur_progress, max_progress) # noqa: 702
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             # Plot overall trend of last x years with STL trend
             overall_df = pd.DataFrame(data=self.__model.get_trend())
@@ -85,14 +85,14 @@ class PdfView:
             axs[current_axis].set_title(f'Fitting of daily closing prices to STL trend of last {self.__model.range_num_of_years} years')
             axs[current_axis].set_ylabel(self.__model.ticker.info['currency'])
             current_axis += 1
-            cur_progress += 1; print_progress(cur_progress, max_progress) # noqa: 702
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             # Plot overall STL residual of last x years with STL trend
             overall_df = pd.DataFrame(data=self.__model.get_residual())
             sns.lineplot(data=overall_df, dashes=False, ax=axs[current_axis], legend='full')
             axs[current_axis].set_title(f'Residual of STL trend of last {self.__model.range_num_of_years} years')
             axs[current_axis].set_ylabel(self.__model.ticker.info['currency'])
-            cur_progress += 1; print_progress(cur_progress, max_progress) # noqa: 702
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             pdf.savefig(fig_overall, facecolor='w')
 
@@ -101,7 +101,7 @@ class PdfView:
             num_subplots = 5
 
             fig_annually = plt.figure()
-            pdf_layout(fig_annually)
+            _pdf_layout(fig_annually)
             gs = GridSpec(5, 3, figure=fig_annually)
             fig_annually.suptitle(f'Annual analysis of {self.__model.ticker.info["longName"]}\nof last {self.__model.range_num_of_years} years\n', fontsize=20)
 
@@ -111,9 +111,9 @@ class PdfView:
             # Plot annual closing prices with confidence band
             annual_df = self.__model.get_annual()
             sns.lineplot(data=annual_df, x='Day', y='Close', ax=axs[current_axis], sort=True)
-            cur_progress += 1; print_progress(cur_progress, max_progress) # noqa: 702
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             sns.lineplot(data=annual_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
-            cur_progress += 1; print_progress(cur_progress, max_progress) # noqa: 702
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
             axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
             axs[current_axis].set_ylabel('USD')
@@ -127,9 +127,9 @@ class PdfView:
             # Plot annual seasonal prices with confidence band
             annunal_seasonal_decomp_df = self.__model.get_annual_seasonal()
             sns.lineplot(data=annunal_seasonal_decomp_df, ax=axs[current_axis], x='Day', y='value')
-            cur_progress += 1; print_progress(cur_progress, max_progress) # noqa: 702
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             sns.lineplot(data=annunal_seasonal_decomp_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
-            cur_progress += 1; print_progress(cur_progress, max_progress) # noqa: 702
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
             axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
             axs[current_axis].set_ylabel('USD')
@@ -143,9 +143,9 @@ class PdfView:
             # Plot annual residual prices with confidence band
             annunal_resid_decomp_df = self.__model.get_annual_residual()
             sns.lineplot(data=annunal_resid_decomp_df, ax=axs[current_axis], x='Day', y='value')
-            cur_progress += 1; print_progress(cur_progress, max_progress) # noqa: 702
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             sns.lineplot(data=annunal_resid_decomp_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
-            cur_progress += 1; print_progress(cur_progress, max_progress) # noqa: 702
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
             axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
             axs[current_axis].set_ylabel('USD')
@@ -161,7 +161,7 @@ class PdfView:
             axs[current_axis].set_ylabel('USD')
             axs[current_axis].set_title('Quarterly')
             current_axis += 1
-            cur_progress += 1; print_progress(cur_progress, max_progress) # noqa: 702
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             axs.append(fig_annually.add_subplot(gs[3, 1:]))
             # Plot monthly seasonal prices
@@ -169,7 +169,7 @@ class PdfView:
             axs[current_axis].set_ylabel('USD')
             axs[current_axis].set_title('Monthly')
             current_axis += 1
-            cur_progress += 1; print_progress(cur_progress, max_progress) # noqa: 702
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             axs.append(fig_annually.add_subplot(gs[4, :-1]))
             # Plot weekly seasonal prices
@@ -178,7 +178,7 @@ class PdfView:
             axs[current_axis].set_title('Weekly')
             axs[current_axis].tick_params(axis='x', labelsize=4)
             current_axis += 1
-            cur_progress += 1; print_progress(cur_progress, max_progress) # noqa: 702
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             axs.append(fig_annually.add_subplot(gs[4, 2]))
             # Plot weekdaily seasonal prices
@@ -186,7 +186,7 @@ class PdfView:
             axs[current_axis].set_ylabel('USD')
             axs[current_axis].set_title('Weekdaily')
             current_axis += 1
-            cur_progress += 1; print_progress(cur_progress, max_progress) # noqa: 702
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             pdf.savefig(fig_annually, facecolor='w')
 
