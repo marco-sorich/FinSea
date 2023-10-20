@@ -9,4 +9,5 @@ Modules:
 
 __all__ = ['.analyzer']
 
-from .analyzer import Analyzer
+from .analyzer import Analyzer  # noqa: F401
+from .views.pdfView import Views  # noqa: F401
