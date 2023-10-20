@@ -3,6 +3,7 @@ from enum import Enum
 
 class Views(Enum):
     PDF = 1
+    CONSOLE = 2
 
 
 class View:

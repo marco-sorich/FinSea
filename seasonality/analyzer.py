@@ -1,5 +1,6 @@
 from .model import Model
 from .views.pdfView import PdfView
+from .views.consoleView import ConsoleView
 from .views.view import Views
 
 
@@ -17,10 +18,15 @@ class Analyzer:
         """
         self.__model.calc()
 
-    def render(self, view: Views, file_name: str) -> None:
+    def render(self, view: Views, file_name: str = '') -> None:
         """
         Renders the seasonality for the given symbol and maximum number of years to analyze.
         """
         if view == Views.PDF:
             self.__view = PdfView(self.__model, file_name)
+        elif view == Views.CONSOLE:
+            self.__view = ConsoleView(self.__model)
+        else:  # pragma: no cover
+            raise ValueError('Unknown view type')
+
         self.__view.render()

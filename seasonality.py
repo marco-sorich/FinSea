@@ -27,7 +27,8 @@ max_num_of_years = 5
 
 analyzer = ssn.Analyzer(symbol, max_num_of_years)
 analyzer.calc()
-analyzer.render(ssn.Views.PDF, 'myPlots.pdf')
+# analyzer.render(ssn.Views.PDF, 'myPlots.pdf')
+analyzer.render(ssn.Views.CONSOLE)
 
 # Open the PDF file
-os.system('open myplots.pdf')
+#os.system('open myplots.pdf')
