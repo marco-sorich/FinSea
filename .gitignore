@@ -1,6 +1,5 @@
 venv/
 .DS_Store
-.vscode/
 .downloads/
 .ipynb_checkpoints/seasonality-checkpoint.ipynb
 *.pyc
