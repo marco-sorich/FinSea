@@ -29,10 +29,9 @@ def _pdf_layout(figure: plt.Figure) -> None:
 class PdfView(View):
 
     def __init__(self, model: Model, file_path: str) -> None:
-        """ Creates a new PdfView object with the given self.__model and file path """
-        self.__model = model
-        self.__file_path = file_path
-        super().__init__()
+        """ Creates a new PdfView object with the given self._model and file path """
+        super().__init__(model)
+        self._file_path = file_path
 
     def render(self) -> None:
         """ Creates a PDF file with the analysis results """
@@ -52,43 +51,43 @@ class PdfView(View):
         sns.set_theme(context='paper', font_scale=0.8, rc={'figure.figsize': (fig_width / 25.4, fig_height / 25.4)}, style='darkgrid')
 
         # Create new PDF file
-        with PdfPages(self.__file_path) as pdf:
+        with PdfPages(self._file_path) as pdf:
 
             # first page - plot overall analysis
             num_subplots = 3
             fig_overall, axs = plt.subplots(num_subplots, 1)
             _pdf_layout(fig_overall)
-            fig_overall.suptitle(f'Overall analysis of {self.__model.ticker.info["longName"]}\n', fontsize=20)
+            fig_overall.suptitle(f'Overall analysis of {self._model.ticker.info["longName"]}\n', fontsize=20)
 
             current_axis = 0
 
             # Plot overall closing prices of last x years
-            overall_df = pd.DataFrame(data=self.__model.get_original())
+            overall_df = pd.DataFrame(data=self._model.get_original())
             overall_df[f'{rolling_wide_resolution} days rolling average'] = overall_df['Close'].rolling(rolling_wide_resolution).mean()
             overall_df[f'{rolling_narrow_resolution} days rolling average'] = overall_df['Close'].rolling(rolling_narrow_resolution).mean()
             overall_df.rename(columns={'Close': 'Daily closing price'}, inplace=True)
-            overall_df = overall_df[self.__model.range_max_yrs.min():pd.to_datetime('today')]
+            overall_df = overall_df[self._model.range_max_yrs.min():pd.to_datetime('today')]
             sns.lineplot(data=overall_df, dashes=False, ax=axs[current_axis], legend='full')
-            axs[current_axis].set_title(f'Daily close prices of last {self.__model.range_num_of_years} years')
-            axs[current_axis].set_ylabel(self.__model.ticker.info['currency'])
+            axs[current_axis].set_title(f'Daily close prices of last {self._model.range_num_of_years} years')
+            axs[current_axis].set_ylabel(self._model.ticker.info['currency'])
             current_axis += 1
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             # Plot overall trend of last x years with STL trend
-            overall_df = pd.DataFrame(data=self.__model.get_trend())
-            overall_df = overall_df[self.__model.range_max_yrs.min():pd.to_datetime('today')]
-            overall_df['Daily closing price'] = self.__model.get_original()[self.__model.range_max_yrs.min():pd.to_datetime('today')]['Close']
+            overall_df = pd.DataFrame(data=self._model.get_trend())
+            overall_df = overall_df[self._model.range_max_yrs.min():pd.to_datetime('today')]
+            overall_df['Daily closing price'] = self._model.get_original()[self._model.range_max_yrs.min():pd.to_datetime('today')]['Close']
             sns.lineplot(data=overall_df, dashes=False, ax=axs[current_axis], legend='full')
-            axs[current_axis].set_title(f'Fitting of daily closing prices to STL trend of last {self.__model.range_num_of_years} years')
-            axs[current_axis].set_ylabel(self.__model.ticker.info['currency'])
+            axs[current_axis].set_title(f'Fitting of daily closing prices to STL trend of last {self._model.range_num_of_years} years')
+            axs[current_axis].set_ylabel(self._model.ticker.info['currency'])
             current_axis += 1
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             # Plot overall STL residual of last x years with STL trend
-            overall_df = pd.DataFrame(data=self.__model.get_residual())
+            overall_df = pd.DataFrame(data=self._model.get_residual())
             sns.lineplot(data=overall_df, dashes=False, ax=axs[current_axis], legend='full')
-            axs[current_axis].set_title(f'Residual of STL trend of last {self.__model.range_num_of_years} years')
-            axs[current_axis].set_ylabel(self.__model.ticker.info['currency'])
+            axs[current_axis].set_title(f'Residual of STL trend of last {self._model.range_num_of_years} years')
+            axs[current_axis].set_ylabel(self._model.ticker.info['currency'])
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             pdf.savefig(fig_overall, facecolor='w')
@@ -100,13 +99,13 @@ class PdfView(View):
             fig_annually = plt.figure()
             _pdf_layout(fig_annually)
             gs = GridSpec(5, 3, figure=fig_annually)
-            fig_annually.suptitle(f'Annual analysis of {self.__model.ticker.info["longName"]}\nof last {self.__model.range_num_of_years} years\n', fontsize=20)
+            fig_annually.suptitle(f'Annual analysis of {self._model.ticker.info["longName"]}\nof last {self._model.range_num_of_years} years\n', fontsize=20)
 
             current_axis = 0
 
             axs.append(fig_annually.add_subplot(gs[0, :]))   # add plot over full line
             # Plot annual closing prices with confidence band
-            annual_df = self.__model.get_annual()
+            annual_df = self._model.get_annual()
             sns.lineplot(data=annual_df, x='Day', y='Close', ax=axs[current_axis], sort=True)
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             sns.lineplot(data=annual_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
@@ -122,7 +121,7 @@ class PdfView(View):
 
             axs.append(fig_annually.add_subplot(gs[1, :]))   # add plot over full line
             # Plot annual seasonal prices with confidence band
-            annunal_seasonal_decomp_df = self.__model.get_annual_seasonal()
+            annunal_seasonal_decomp_df = self._model.get_annual_seasonal()
             sns.lineplot(data=annunal_seasonal_decomp_df, ax=axs[current_axis], x='Day', y='value')
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             sns.lineplot(data=annunal_seasonal_decomp_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
@@ -138,7 +137,7 @@ class PdfView(View):
 
             axs.append(fig_annually.add_subplot(gs[2, :]))   # add plot over full line
             # Plot annual residual prices with confidence band
-            annunal_resid_decomp_df = self.__model.get_annual_residual()
+            annunal_resid_decomp_df = self._model.get_annual_residual()
             sns.lineplot(data=annunal_resid_decomp_df, ax=axs[current_axis], x='Day', y='value')
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             sns.lineplot(data=annunal_resid_decomp_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
@@ -154,7 +153,7 @@ class PdfView(View):
 
             axs.append(fig_annually.add_subplot(gs[3, 0]))
             # Plot quarterly seasonal prices
-            sns.boxplot(data=self.__model.get_quarterly_seasonal(), x='Quarter', y='value', ax=axs[current_axis])
+            sns.boxplot(data=self._model.get_quarterly_seasonal(), x='Quarter', y='value', ax=axs[current_axis])
             axs[current_axis].set_ylabel('USD')
             axs[current_axis].set_title('Quarterly')
             current_axis += 1
@@ -162,7 +161,7 @@ class PdfView(View):
 
             axs.append(fig_annually.add_subplot(gs[3, 1:]))
             # Plot monthly seasonal prices
-            sns.boxplot(data=self.__model.get_monthly_seasonal(), x='Month', y='value', ax=axs[current_axis])
+            sns.boxplot(data=self._model.get_monthly_seasonal(), x='Month', y='value', ax=axs[current_axis])
             axs[current_axis].set_ylabel('USD')
             axs[current_axis].set_title('Monthly')
             current_axis += 1
@@ -170,7 +169,7 @@ class PdfView(View):
 
             axs.append(fig_annually.add_subplot(gs[4, :-1]))
             # Plot weekly seasonal prices
-            sns.boxplot(data=self.__model.get_weekly_seasonal(), x='Week', y='value', ax=axs[current_axis])
+            sns.boxplot(data=self._model.get_weekly_seasonal(), x='Week', y='value', ax=axs[current_axis])
             axs[current_axis].set_ylabel('USD')
             axs[current_axis].set_title('Weekly')
             axs[current_axis].tick_params(axis='x', labelsize=4)
@@ -179,7 +178,7 @@ class PdfView(View):
 
             axs.append(fig_annually.add_subplot(gs[4, 2]))
             # Plot weekdaily seasonal prices
-            sns.boxplot(data=self.__model.get_weekdaily_seasonal(), x='Weekday', y='value', ax=axs[current_axis])
+            sns.boxplot(data=self._model.get_weekdaily_seasonal(), x='Weekday', y='value', ax=axs[current_axis])
             axs[current_axis].set_ylabel('USD')
             axs[current_axis].set_title('Weekdaily')
             current_axis += 1

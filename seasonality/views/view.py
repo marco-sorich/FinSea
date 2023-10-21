@@ -1,5 +1,7 @@
 from enum import Enum
 
+from ..model import Model
+
 
 class Views(Enum):
     PDF = 1
@@ -8,7 +10,8 @@ class Views(Enum):
 
 class View:
 
-    def __init__(self) -> None:
+    def __init__(self, model: Model) -> None:
+        self._model = model
         """ Creates a new View object """
 
     def render(self) -> None:
