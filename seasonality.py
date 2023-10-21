@@ -33,7 +33,7 @@ parser.add_argument('-v', '--view', type=str, default='console', help='View to r
 parser.add_argument('-f', '--file', type=str, default='myPlots.pdf', help='File name to save the results (optional for ''console'' view))')
 
 
-analyzer = ssn.Analyzer(parser.parse_args.symbol, parser.parse_args.years)
+analyzer = ssn.Analyzer(parser.parse_args().symbol, parser.parse_args().years)
 analyzer.calc()
 
 if parser.parse_args().view == 'console':
