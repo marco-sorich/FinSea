@@ -30,16 +30,16 @@ parser = argparse.ArgumentParser(description='Seasonality Analyzer')
 parser.add_argument('-s', '--symbol', type=str, default=symbol, help='Ticker symbol to analyze')
 parser.add_argument('-y', '--years', type=int, default=max_num_of_years, help='Maximum number of years to analyze backwards')
 parser.add_argument('-v', '--view', type=str, default='console', help='View to render the results (''console'' or ''pdf'')')
-parser.add_argument('-f', '--file', type=str, default='myPlots.pdf', help='File name to save the results')
+parser.add_argument('-f', '--file', type=str, default='myPlots.pdf', help='File name to save the results (optional for ''console'' view))')
 
 
-analyzer = ssn.Analyzer(symbol, max_num_of_years)
+analyzer = ssn.Analyzer(parser.parse_args.symbol, parser.parse_args.years)
 analyzer.calc()
 
 if parser.parse_args().view == 'console':
     analyzer.render(ssn.Views.CONSOLE)
 elif parser.parse_args().view == 'pdf':
-    analyzer.render(ssn.Views.PDF, 'myPlots.pdf')
+    analyzer.render(ssn.Views.PDF, parser.parse_args().file)
     os.system('open myplots.pdf')
 else:
     raise ValueError('Unknown view type')
