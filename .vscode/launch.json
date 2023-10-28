@@ -19,7 +19,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/seasonality.py",
             "console": "integratedTerminal",
-            "args": ["--view", "pdf"],
+            "args": ["--view", "pdf", "--file", "myplots.pdf"],
             "justMyCode": true
         }
     ]
