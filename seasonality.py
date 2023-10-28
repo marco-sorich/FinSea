@@ -36,10 +36,10 @@ def view_type(view_str: str) -> ssn.Views:
 
 
 parser = argparse.ArgumentParser(description='Seasonality Analyzer')
-parser.add_argument('-s', '--symbol', type=str, default=symbol, help='Ticker symbol to analyze (default: ' + symbol + ')')
-parser.add_argument('-y', '--years', type=int, default=max_num_of_years, help='Maximum number of years to analyze backwards (default: ' + str(max_num_of_years) + ')')
-parser.add_argument('-v', '--view', type=view_type, default=ssn.Views.CONSOLE, help='View to render the results (''console'' or ''pdf'')')
-parser.add_argument('-f', '--file', type=str, default='', help='File name to save the results (optional for ''console'' view)')
+parser.add_argument('-s', '--symbol', type=str, default=symbol, help=f'Ticker symbol to analyze (default: {symbol})')
+parser.add_argument('-y', '--years', type=int, default=max_num_of_years, help=f'Maximum number of years to analyze backwards (default: {max_num_of_years} years)')
+parser.add_argument('-v', '--view', type=view_type, default=ssn.Views.CONSOLE, help='View to render the results (''console'' or ''pdf'', default: console)')
+parser.add_argument('-f', '--file', type=str, default='', help='File name to save the results (optional for console view)')
 
 
 analyzer = ssn.Analyzer(parser.parse_args().symbol, parser.parse_args().years)
