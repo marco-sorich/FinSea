@@ -1,6 +1,8 @@
 venv/
+.venv/
 .DS_Store
 .downloads/
-.ipynb_checkpoints/seasonality-checkpoint.ipynb
+.ipynb_checkpoints/
 *.pyc
 myplots.pdf
+**/__pycache__/
