@@ -76,7 +76,7 @@ def _df_to_wide_form(
     wideDf = wideDf.asfreq(freq)
 
     # fill up missing values for better comparison
-    wideDf = wideDf.fillna(method='ffill') if with_fill else wideDf
+    wideDf = wideDf.ffill() if with_fill else wideDf
 
     # Drop Feb. 29th of leap years for better comparison
     wideDf = wideDf[~((wideDf.index.month == 2) & (wideDf.index.day == 29))] if drop_leap else wideDf
@@ -179,7 +179,7 @@ class Model:
         self._df = self._df.asfreq('B')
 
         # fill up missing values
-        self._df = self._df.fillna(method='ffill')
+        self._df = self._df.ffill()
 
         # prepare range of max 5 years or smaller if dataframe is smaller
         first_day = pd.to_datetime(str((self._df.index.year.min() + 1 if ((self._df.index.year.max() - 1) - (self._df.index.year.min() + 1)) < self.years else self._df.index.year.max() - self.years)) + '-01-01')
