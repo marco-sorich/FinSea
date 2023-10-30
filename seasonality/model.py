@@ -196,7 +196,7 @@ class Model:
         }
         pickle.dump(backtest_info, open(pickle_filename, 'wb'))
 
-        self._annual_df = _df_to_wide_form(self._df.assign(**{'rolling average': self._df['Close'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
+        self._annual_df = _df_to_wide_form(self._df, self.range_max_yrs)
 
         # set to multiindex: 1st level 'Day', 2nd level 'Year'
         self._annual_df = self._annual_df.set_index(['Year', 'Day'])
@@ -236,14 +236,14 @@ class Model:
         return self._annual_df
 
     def get_annual_seasonal(self) -> pd.DataFrame:
-        """Returns the decomposed annual daily seasonal dataframe including rolling average in wide form."""
-        # prepare annual dataframes with multiindex including the rolling average
-        return _df_to_wide_form(self._seasonal_decomp_df.assign(**{'rolling average': self._seasonal_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
+        """Returns the decomposed annual daily seasonal dataframe in wide form."""
+        # prepare annual dataframes with multiindex
+        return _df_to_wide_form(self._seasonal_decomp_df, self.range_max_yrs)
 
     def get_annual_residual(self) -> pd.DataFrame:
-        """Returns the decomposed annual daily residual dataframe including rolling average in wide form."""
-        # prepare annual dataframes with multiindex including the rolling average
-        return _df_to_wide_form(self._resid_decomp_df.assign(**{'rolling average': self._resid_decomp_df['value'].rolling(self.annual_rolling_days).mean()}), self.range_max_yrs)
+        """Returns the decomposed annual daily residual dataframe in wide form."""
+        # prepare annual dataframes with multiindex
+        return _df_to_wide_form(self._resid_decomp_df, self.range_max_yrs)
 
     def get_monthly_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed annual monthly seasonal dataframe."""

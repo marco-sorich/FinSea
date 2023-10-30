@@ -18,12 +18,12 @@ class Analyzer:
         """
         self.__model.calc()
 
-    def render(self, view: Views, file_name: str = '') -> None:
+    def render(self, view: Views, file_name: str = '', ann_conf_band: bool = True) -> None:
         """
         Renders the seasonality for the given symbol and maximum number of years to analyze.
         """
         if view == Views.PDF:
-            self.__view = PdfView(self.__model, file_name)
+            self.__view = PdfView(self.__model, file_name, ann_conf_band=("ci", 95)) if ann_conf_band else PdfView(self.__model, file_name, ann_conf_band=None)
         elif view == Views.CONSOLE:
             self.__view = ConsoleView(self.__model)
         else:  # pragma: no cover

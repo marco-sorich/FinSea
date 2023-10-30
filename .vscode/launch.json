@@ -21,6 +21,15 @@
             "console": "integratedTerminal",
             "args": ["--view", "pdf", "--file", "myplots.pdf"],
             "justMyCode": true
+        },
+        {
+            "name": "PDF output w/ conf bands",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/seasonality.py",
+            "console": "integratedTerminal",
+            "args": ["--view", "pdf", "--file", "myplots.pdf", "-a"],
+            "justMyCode": true
         }
     ]
 }

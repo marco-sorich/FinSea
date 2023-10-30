@@ -28,15 +28,16 @@ def _pdf_layout(figure: plt.Figure) -> None:
 
 class PdfView(View):
 
-    def __init__(self, model: Model, file_path: str) -> None:
+    def __init__(self, model: Model, file_path: str, ann_conf_band=("ci", 95)) -> None:
         """ Creates a new PdfView object with the given self._model and file path """
         super().__init__(model)
         self._file_path = file_path
+        self._ann_conf_band = ann_conf_band
 
     def render(self) -> None:
         """ Creates a PDF file with the analysis results """
 
-        max_progress = 14
+        max_progress = 11
         cur_progress = 0; _print_progress(cur_progress, max_progress)  # noqa: 702
 
         # Set the figure size to DIN A4 dimensions with a 10mm border
@@ -106,48 +107,51 @@ class PdfView(View):
             axs.append(fig_annually.add_subplot(gs[0, :]))   # add plot over full line
             # Plot annual closing prices with confidence band
             annual_df = self._model.get_annual()
-            sns.lineplot(data=annual_df, x='Day', y='Close', ax=axs[current_axis], sort=True)
-            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
-            sns.lineplot(data=annual_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
+            sns.lineplot(data=annual_df, x='Day', y='Close', ax=axs[current_axis], sort=True, errorbar=self._ann_conf_band)
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
             axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
             axs[current_axis].set_ylabel('USD')
             axs[current_axis].set_xlabel('Date')
             axs[current_axis].set_title('annually closing prices')
-            axs[current_axis].legend(labels=['Daily Mean', '90% Confidence', 'Mean of Rolling Averages'])
+            labels = ['Daily Mean', 'today']
+            if self._ann_conf_band:
+                labels.insert(1, '90% Confidence')
+            axs[current_axis].legend(labels=labels)
             axs[current_axis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
             current_axis += 1
 
             axs.append(fig_annually.add_subplot(gs[1, :]))   # add plot over full line
             # Plot annual seasonal prices with confidence band
             annunal_seasonal_decomp_df = self._model.get_annual_seasonal()
-            sns.lineplot(data=annunal_seasonal_decomp_df, ax=axs[current_axis], x='Day', y='value')
-            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
-            sns.lineplot(data=annunal_seasonal_decomp_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
+            sns.lineplot(data=annunal_seasonal_decomp_df, ax=axs[current_axis], x='Day', y='value', errorbar=self._ann_conf_band)
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
             axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
             axs[current_axis].set_ylabel('USD')
             axs[current_axis].set_xlabel('Date')
             axs[current_axis].set_title('annually seasonal price changes')
-            axs[current_axis].legend(labels=['Daily Mean', '90% Confidence', 'Mean of Rolling Averages'])
+            labels = ['Daily Mean', 'today']
+            if self._ann_conf_band:
+                labels.insert(1, '90% Confidence')
+            axs[current_axis].legend(labels=labels)
             axs[current_axis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
             current_axis += 1
 
             axs.append(fig_annually.add_subplot(gs[2, :]))   # add plot over full line
             # Plot annual residual prices with confidence band
             annunal_resid_decomp_df = self._model.get_annual_residual()
-            sns.lineplot(data=annunal_resid_decomp_df, ax=axs[current_axis], x='Day', y='value')
-            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
-            sns.lineplot(data=annunal_resid_decomp_df, x='Day', y='rolling average', ax=axs[current_axis], sort=True, errorbar=None)
+            sns.lineplot(data=annunal_resid_decomp_df, ax=axs[current_axis], x='Day', y='value', errorbar=self._ann_conf_band)
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
             axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
             axs[current_axis].set_ylabel('USD')
             axs[current_axis].set_xlabel('Date')
             axs[current_axis].set_title('Annually non-seasonal price changes')
-            axs[current_axis].legend(labels=['Daily Mean', '90% Confidence', 'Mean of Rolling Averages'])
+            labels = ['Daily Mean', 'today']
+            if self._ann_conf_band:
+                labels.insert(1, '90% Confidence')
+            axs[current_axis].legend(labels=labels)
             axs[current_axis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
             current_axis += 1
 

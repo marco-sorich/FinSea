@@ -40,12 +40,13 @@ parser.add_argument('-s', '--symbol', type=str, default=symbol, help=f'Ticker sy
 parser.add_argument('-y', '--years', type=int, default=max_num_of_years, help=f'Maximum number of years to analyze backwards (default: {max_num_of_years} years)')
 parser.add_argument('-v', '--view', type=view_type, default=ssn.Views.CONSOLE, help='View to render the results (''console'' or ''pdf'', default: console)')
 parser.add_argument('-f', '--file', type=str, default='', help='File name to save the results (optional for console view)')
+parser.add_argument('-a', '--ann_conf_band', action='store_true', help='Enable confidence bands to annual plots (time consuming, only for pdf view)')
 
 
 analyzer = ssn.Analyzer(parser.parse_args().symbol, parser.parse_args().years)
 analyzer.calc()
 
-analyzer.render(parser.parse_args().view, parser.parse_args().file)
+analyzer.render(parser.parse_args().view, parser.parse_args().file, ann_conf_band=parser.parse_args().ann_conf_band)
 
 if parser.parse_args().file != '':
     os.system(f'open {parser.parse_args().file}')
