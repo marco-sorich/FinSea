@@ -14,7 +14,7 @@
             "justMyCode": true
         },
         {
-            "name": "PDF output",
+            "name": "PDF",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/seasonality.py",
@@ -23,7 +23,16 @@
             "justMyCode": true
         },
         {
-            "name": "PDF output w/ conf bands",
+            "name": "PDF only overall prices",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/seasonality.py",
+            "console": "integratedTerminal",
+            "args": ["--view", "pdf", "--file", "myplots.pdf", "-not", "-nor", "-noap", "-noas", "-noar", "-noaw", "-noam", "-noaq", "-now"],
+            "justMyCode": true
+        },
+        {
+            "name": "PDF w/ conf bands",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/seasonality.py",

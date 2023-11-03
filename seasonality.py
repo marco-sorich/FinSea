@@ -41,12 +41,35 @@ parser.add_argument('-y', '--years', type=int, default=max_num_of_years, help=f'
 parser.add_argument('-v', '--view', type=view_type, default=ssn.Views.CONSOLE, help='View to render the results (''console'' or ''pdf'', default: console)')
 parser.add_argument('-f', '--file', type=str, default='', help='File name to save the results (optional for console view)')
 parser.add_argument('-a', '--ann_conf_band', action='store_true', help='Enable confidence bands to annual plots (time consuming, only for pdf view)')
+parser.add_argument('-nop', '--no_overall_daily_prices_plot', action='store_true', help='Disable overall daily prices plot in pdf view')
+parser.add_argument('-not', '--no_overall_daily_trend_plot', action='store_true', help='Disable overall daily trend plot in pdf view')
+parser.add_argument('-nor', '--no_overall_daily_residual_plot', action='store_true', help='Disable overall daily residual plot in pdf view')
+parser.add_argument('-noap', '--no_annual_daily_prices_plot', action='store_true', help='Disable annual daily prices plot in pdf view')
+parser.add_argument('-noas', '--no_annual_daily_seasonal_plot', action='store_true', help='Disable annual daily seasonal plot in pdf view')
+parser.add_argument('-noar', '--no_annual_daily_redisdual_plot', action='store_true', help='Disable annual daily residual plot in pdf view')
+parser.add_argument('-noaw', '--no_annual_weekly_seasonal_plot', action='store_true', help='Disable annual weekly seasonal plot in pdf view')
+parser.add_argument('-noam', '--no_annual_monthly_seasonal_plot', action='store_true', help='Disable annual monthly seasonal plot in pdf view')
+parser.add_argument('-noaq', '--no_annual_quarterly_seasonal_plot', action='store_true', help='Disable annual quarterly seasonal plot in pdf view')
+parser.add_argument('-now', '--no_weekdaily_seasonal_plot', action='store_true', help='Disable weekdaily seasonal plot in pdf view')
 
 
 analyzer = ssn.Analyzer(parser.parse_args().symbol, parser.parse_args().years)
 analyzer.calc()
 
-analyzer.render(parser.parse_args().view, parser.parse_args().file, ann_conf_band=parser.parse_args().ann_conf_band)
+analyzer.render(
+    parser.parse_args().view,
+    parser.parse_args().file,
+    ann_conf_band=parser.parse_args().ann_conf_band,
+    no_overall_daily_prices_plot=parser.parse_args().no_overall_daily_prices_plot,
+    no_overall_daily_trend_plot=parser.parse_args().no_overall_daily_trend_plot,
+    no_overall_daily_residual_plot=parser.parse_args().no_overall_daily_residual_plot,
+    no_annual_daily_prices_plot=parser.parse_args().no_annual_daily_prices_plot,
+    no_annual_daily_seasonal_plot=parser.parse_args().no_annual_daily_seasonal_plot,
+    no_annual_daily_redisdual_plot=parser.parse_args().no_annual_daily_redisdual_plot,
+    no_annual_weekly_seasonal_plot=parser.parse_args().no_annual_weekly_seasonal_plot,
+    no_annual_monthly_seasonal_plot=parser.parse_args().no_annual_monthly_seasonal_plot,
+    no_annual_quarterly_seasonal_plot=parser.parse_args().no_annual_quarterly_seasonal_plot,
+    no_weekdaily_seasonal_plot=parser.parse_args().no_weekdaily_seasonal_plot)
 
 if parser.parse_args().file != '':
     os.system(f'open {parser.parse_args().file}')
