@@ -32,13 +32,22 @@
             "justMyCode": true
         },
         {
-            "name": "PDF w/ conf bands",
+            "name": "Help message",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/seasonality.py",
             "console": "integratedTerminal",
-            "args": ["--view", "pdf", "--file", "myplots.pdf", "-a"],
+            "args": ["--help"],
             "justMyCode": true
-        }
-    ]
+        },
+        {
+            "name": "PDF",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/seasonality.py",
+            "console": "integratedTerminal",
+            "args": ["--view", "pdf", "--file", "myplots.pdf"],
+            "justMyCode": true
+        },
+   ]
 }
