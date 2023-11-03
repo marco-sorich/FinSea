@@ -58,7 +58,8 @@ class PdfView(View):
             num_subplots = 3
             fig_overall, axs = plt.subplots(num_subplots, 1)
             _pdf_layout(fig_overall)
-            fig_overall.suptitle(f'Overall analysis of {self._model.ticker.info["longName"]}\n', fontsize=20)
+            long_name = self._model.ticker.info["longName"].replace(" ", "\\ ")
+            fig_overall.suptitle(f'Overall analysis of\n$\\bf{{{long_name}}}$', fontsize=20)
 
             current_axis = 0
 
@@ -100,7 +101,7 @@ class PdfView(View):
             fig_annually = plt.figure()
             _pdf_layout(fig_annually)
             gs = GridSpec(5, 3, figure=fig_annually)
-            fig_annually.suptitle(f'Annual analysis of {self._model.ticker.info["longName"]}\nof last {self._model.range_num_of_years} years\n', fontsize=20)
+            fig_annually.suptitle(f'Annual analysis of\n$\\bf{{{long_name}}}$\nof last {self._model.range_num_of_years} years\n', fontsize=20)
 
             current_axis = 0
 
