@@ -63,8 +63,8 @@ class PdfView(View):
 
             current_axis = 0
 
-            # Plot overall closing prices of last x years
-            overall_df = pd.DataFrame(data=self._model.get_original())
+            # Plot overall daily closing prices of last x years
+            overall_df = pd.DataFrame(data=self._model.get_overall_daily_prices())
             overall_df[f'{rolling_wide_resolution} days rolling average'] = overall_df['Close'].rolling(rolling_wide_resolution).mean()
             overall_df[f'{rolling_narrow_resolution} days rolling average'] = overall_df['Close'].rolling(rolling_narrow_resolution).mean()
             overall_df.rename(columns={'Close': 'Daily closing price'}, inplace=True)
@@ -75,18 +75,18 @@ class PdfView(View):
             current_axis += 1
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
-            # Plot overall trend of last x years with STL trend
-            overall_df = pd.DataFrame(data=self._model.get_trend())
+            # Plot overall daily trend of last x years
+            overall_df = pd.DataFrame(data=self._model.get_overall_daily_trend())
             overall_df = overall_df[self._model.range_max_yrs.min():pd.to_datetime('today')]
-            overall_df['Daily closing price'] = self._model.get_original()[self._model.range_max_yrs.min():pd.to_datetime('today')]['Close']
+            overall_df['Daily closing price'] = self._model.get_overall_daily_prices()[self._model.range_max_yrs.min():pd.to_datetime('today')]['Close']
             sns.lineplot(data=overall_df, dashes=False, ax=axs[current_axis], legend='full')
             axs[current_axis].set_title(f'Fitting of daily closing prices to STL trend of last {self._model.range_num_of_years} years')
             axs[current_axis].set_ylabel(self._model.ticker.info['currency'])
             current_axis += 1
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
-            # Plot overall STL residual of last x years with STL trend
-            overall_df = pd.DataFrame(data=self._model.get_residual())
+            # Plot overall daily residual of last x years
+            overall_df = pd.DataFrame(data=self._model.get_overall_daily_residual())
             sns.lineplot(data=overall_df, dashes=False, ax=axs[current_axis], legend='full')
             axs[current_axis].set_title(f'Residual of STL trend of last {self._model.range_num_of_years} years')
             axs[current_axis].set_ylabel(self._model.ticker.info['currency'])
@@ -106,8 +106,8 @@ class PdfView(View):
             current_axis = 0
 
             axs.append(fig_annually.add_subplot(gs[0, :]))   # add plot over full line
-            # Plot annual closing prices with confidence band
-            annual_df = self._model.get_annual()
+            # Plot annual daily closing prices with confidence band
+            annual_df = self._model.get_annual_daily_prices()
             sns.lineplot(data=annual_df, x='Day', y='Close', ax=axs[current_axis], sort=True, errorbar=self._ann_conf_band)
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
@@ -123,8 +123,8 @@ class PdfView(View):
             current_axis += 1
 
             axs.append(fig_annually.add_subplot(gs[1, :]))   # add plot over full line
-            # Plot annual seasonal prices with confidence band
-            annunal_seasonal_decomp_df = self._model.get_annual_seasonal()
+            # Plot annual daily seasonal prices with confidence band
+            annunal_seasonal_decomp_df = self._model.get_annual_daily_seasonal()
             sns.lineplot(data=annunal_seasonal_decomp_df, ax=axs[current_axis], x='Day', y='value', errorbar=self._ann_conf_band)
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
@@ -140,8 +140,8 @@ class PdfView(View):
             current_axis += 1
 
             axs.append(fig_annually.add_subplot(gs[2, :]))   # add plot over full line
-            # Plot annual residual prices with confidence band
-            annunal_resid_decomp_df = self._model.get_annual_residual()
+            # Plot annual daily residual prices with confidence band
+            annunal_resid_decomp_df = self._model.get_annual_daily_residual()
             sns.lineplot(data=annunal_resid_decomp_df, ax=axs[current_axis], x='Day', y='value', errorbar=self._ann_conf_band)
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
@@ -157,15 +157,15 @@ class PdfView(View):
             current_axis += 1
 
             axs.append(fig_annually.add_subplot(gs[3, 0]))
-            # Plot quarterly seasonal prices
-            sns.boxplot(data=self._model.get_quarterly_seasonal(), x='Quarter', y='value', ax=axs[current_axis])
+            # Plot annual quarterly seasonal prices
+            sns.boxplot(data=self._model.get_annual_quarterly_seasonal(), x='Quarter', y='value', ax=axs[current_axis])
             axs[current_axis].set_ylabel('USD')
             axs[current_axis].set_title('Quarterly')
             current_axis += 1
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             axs.append(fig_annually.add_subplot(gs[3, 1:]))
-            # Plot monthly seasonal prices
+            # Plot annual monthly seasonal prices
             sns.boxplot(data=self._model.get_monthly_seasonal(), x='Month', y='value', ax=axs[current_axis])
             axs[current_axis].set_ylabel('USD')
             axs[current_axis].set_title('Monthly')
@@ -173,8 +173,8 @@ class PdfView(View):
             cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             axs.append(fig_annually.add_subplot(gs[4, :-1]))
-            # Plot weekly seasonal prices
-            sns.boxplot(data=self._model.get_weekly_seasonal(), x='Week', y='value', ax=axs[current_axis])
+            # Plot annual weekly seasonal prices
+            sns.boxplot(data=self._model.get_annual_weekly_seasonal(), x='Week', y='value', ax=axs[current_axis])
             axs[current_axis].set_ylabel('USD')
             axs[current_axis].set_title('Weekly')
             axs[current_axis].tick_params(axis='x', labelsize=4)

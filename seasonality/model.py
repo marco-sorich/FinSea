@@ -141,11 +141,11 @@ class Model:
         self.years = years
         self.robust = robust
         self.annual_rolling_days = annual_rolling_days
-        self._df = pd.DataFrame()
-        self._seasonal_decomp_df = pd.DataFrame()
-        self._trend_decomp_df = pd.DataFrame()
-        self._resid_decomp_df = pd.DataFrame()
-        self._annual_df = pd.DataFrame()
+        self._overall_daily_prices = pd.DataFrame()
+        self._overall_daily_seasonal = pd.DataFrame()
+        self._overall_daily_trend = pd.DataFrame()
+        self._overall_daily_residual = pd.DataFrame()
+        self._annual_daily_prices = pd.DataFrame()
 
     def calc(self):
         """Performs the calculation to fill all the attributes."""
@@ -165,25 +165,25 @@ class Model:
 
         if not os.path.isfile(history_filename):
             yf.pdr_override()  # <== that's all it takes :-)
-            self._df = pdr.get_data_yahoo(tickers=[self.symbol], interval="1d")
-            self._df.to_csv(history_filename)
+            self._overall_daily_prices = pdr.get_data_yahoo(tickers=[self.symbol], interval="1d")
+            self._overall_daily_prices.to_csv(history_filename)
         else:
-            self._df = pd.read_csv(history_filename, parse_dates=['Date'], index_col=['Date'])
+            self._overall_daily_prices = pd.read_csv(history_filename, parse_dates=['Date'], index_col=['Date'])
 
-        self._df = self._df[['Close']]
+        self._overall_daily_prices = self._overall_daily_prices[['Close']]
 
         # for (k, v) in ticker.info.items():
         #    D(f'* {k}: {v}')
 
         # set correct frequency
-        self._df = self._df.asfreq('B')
+        self._overall_daily_prices = self._overall_daily_prices.asfreq('B')
 
         # fill up missing values
-        self._df = self._df.ffill()
+        self._overall_daily_prices = self._overall_daily_prices.ffill()
 
         # prepare range of max 5 years or smaller if dataframe is smaller
-        first_day = pd.to_datetime(str((self._df.index.year.min() + 1 if ((self._df.index.year.max() - 1) - (self._df.index.year.min() + 1)) < self.years else self._df.index.year.max() - self.years)) + '-01-01')
-        last_day = pd.to_datetime(str(self._df.index.year.max() - 1) + '-12-31')
+        first_day = pd.to_datetime(str((self._overall_daily_prices.index.year.min() + 1 if ((self._overall_daily_prices.index.year.max() - 1) - (self._overall_daily_prices.index.year.min() + 1)) < self.years else self._overall_daily_prices.index.year.max() - self.years)) + '-01-01')
+        last_day = pd.to_datetime(str(self._overall_daily_prices.index.year.max() - 1) + '-12-31')
         self.range_max_yrs = pd.date_range(first_day, last_day, freq='D')
 
         # get actual number of calculated years for dataframe
@@ -196,71 +196,71 @@ class Model:
         }
         pickle.dump(backtest_info, open(pickle_filename, 'wb'))
 
-        self._annual_df = _df_to_wide_form(self._df, self.range_max_yrs)
+        self._annual_daily_prices = _df_to_wide_form(self._overall_daily_prices, self.range_max_yrs)
 
         # set to multiindex: 1st level 'Day', 2nd level 'Year'
-        self._annual_df = self._annual_df.set_index(['Year', 'Day'])
+        self._annual_daily_prices = self._annual_daily_prices.set_index(['Year', 'Day'])
 
         # reorder by index level 'Day'
-        self._annual_df = self._annual_df.sort_index(level='Year')
+        self._annual_daily_prices = self._annual_daily_prices.sort_index(level='Year')
 
-        decomp_df = pd.DataFrame(data=self._df)
+        decomp_df = pd.DataFrame(data=self._overall_daily_prices)
 
         # crop dataframe to max 5 last full years
         decomp_df = decomp_df[self.range_max_yrs.min():pd.to_datetime('today')]
 
         # decompose seasonal trend and residual via LOESS regression
         decompose_result = STL(decomp_df['Close'], period=365, robust=self.robust, seasonal=7, seasonal_deg=1, trend_deg=1, low_pass_deg=1, seasonal_jump=1, trend_jump=1, low_pass_jump=1).fit()
-        self._seasonal_decomp_df['value'] = decompose_result.seasonal
-        self._trend_decomp_df['value'] = decompose_result.trend
-        self._resid_decomp_df['value'] = decompose_result.resid
+        self._overall_daily_seasonal['value'] = decompose_result.seasonal
+        self._overall_daily_trend['value'] = decompose_result.trend
+        self._overall_daily_residual['value'] = decompose_result.resid
 
-    def get_original(self) -> pd.DataFrame:
+    def get_overall_daily_prices(self) -> pd.DataFrame:
         """Returns the original dataframe as downloaded from internet."""
-        return self._df
+        return self._overall_daily_prices
 
-    def get_trend(self) -> pd.DataFrame:
+    def get_overall_daily_trend(self) -> pd.DataFrame:
         """Returns the decomposed trend dataframe right out of the STL fit() function."""
-        return self._trend_decomp_df
+        return self._overall_daily_trend
 
-    def get_seasonal(self) -> pd.DataFrame:
+    def get_overall_daily_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed seasonal dataframe right out of the STL fit() function."""
-        return self._seasonal_decomp_df
+        return self._overall_daily_seasonal
 
-    def get_residual(self) -> pd.DataFrame:
+    def get_overall_daily_residual(self) -> pd.DataFrame:
         """Returns the decomposed residual dataframe right out of the STL fit() function."""
-        return self._resid_decomp_df
+        return self._overall_daily_residual
 
-    def get_annual(self) -> pd.DataFrame:
+    def get_annual_daily_prices(self) -> pd.DataFrame:
         """Returns the original annual dataframe converted to wide form."""
-        return self._annual_df
+        return self._annual_daily_prices
 
-    def get_annual_seasonal(self) -> pd.DataFrame:
+    def get_annual_daily_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed annual daily seasonal dataframe in wide form."""
         # prepare annual dataframes with multiindex
-        return _df_to_wide_form(self._seasonal_decomp_df, self.range_max_yrs)
+        return _df_to_wide_form(self._overall_daily_seasonal, self.range_max_yrs)
 
-    def get_annual_residual(self) -> pd.DataFrame:
+    def get_annual_daily_residual(self) -> pd.DataFrame:
         """Returns the decomposed annual daily residual dataframe in wide form."""
         # prepare annual dataframes with multiindex
-        return _df_to_wide_form(self._resid_decomp_df, self.range_max_yrs)
+        return _df_to_wide_form(self._overall_daily_residual, self.range_max_yrs)
 
     def get_monthly_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed annual monthly seasonal dataframe."""
         # prepare annual dataframes with multiindex including the rolling average
-        return _df_to_wide_form(self._seasonal_decomp_df.resample('M').mean(), self.range_max_yrs, freq='M', col_name='Month', col_content='%b', with_fill=False, drop_leap=False)
+        return _df_to_wide_form(self._overall_daily_seasonal.resample('M').mean(), self.range_max_yrs, freq='M', col_name='Month', col_content='%b', with_fill=False, drop_leap=False)
 
     def get_weekdaily_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed weekdaily seasonal dataframe."""
         # prepare annual dataframes with multiindex including the rolling average
-        return _df_to_wide_form(self._seasonal_decomp_df, self.range_max_yrs, freq='B', col_name='Weekday', col_content='%a', with_fill=False, drop_leap=False)
+        return _df_to_wide_form(self._overall_daily_seasonal, self.range_max_yrs, freq='B', col_name='Weekday', col_content='%a', with_fill=False, drop_leap=False)
 
-    def get_quarterly_seasonal(self) -> pd.DataFrame:
+    def get_annual_quarterly_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed annual quarterly seasonal dataframe."""
         # prepare annual dataframes with multiindex including the rolling average
-        return _df_to_wide_form(self._seasonal_decomp_df.resample('Q').mean(), self.range_max_yrs, freq='Q', col_name='Quarter', col_content='%b', with_fill=False, drop_leap=False)
+        return _df_to_wide_form(self._overall_daily_seasonal.resample('Q').mean(), self.range_max_yrs, freq='Q', col_name='Quarter', col_content='%b', with_fill=False, drop_leap=False)
 
-    def get_weekly_seasonal(self) -> pd.DataFrame:
+    def get_annual_weekly_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed annual weekly seasonal dataframe."""
         # prepare annual dataframes with multiindex including the rolling average
-        return _df_to_wide_form(self._seasonal_decomp_df.resample('W').mean(), self.range_max_yrs, freq='W', col_name='Week', col_content='%V', with_fill=False, drop_leap=False)
+        return _df_to_wide_form(self._overall_daily_seasonal.resample('W').mean(), self.range_max_yrs, freq='W', col_name='Week', col_content='%V', with_fill=False, drop_leap=False)
