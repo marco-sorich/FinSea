@@ -9,16 +9,10 @@ import pandas as pd
 
 import seaborn as sns
 
+from progress.bar import Bar
+
 from .view import View
 from ..model import Model
-
-
-def _print_progress(current: int, total: int) -> None:
-    """ Prints the progress of the analysis """
-    progress = (current + 1) / total
-    print("\r[%-20s] %d%%" % ('=' * int(20 * progress), 100 * progress), end='')
-    if current == total - 1:
-        print()
 
 
 def _pdf_layout(figure: plt.Figure) -> None:
@@ -66,8 +60,8 @@ class PdfView(View):
         """ Creates a PDF file with the analysis results """
 
         # configure progress bar
-        max_progress = 11 - self._no_overall_daily_prices_plot - self._no_overall_daily_trend_plot - self._no_overall_daily_residual_plot - self._no_annual_daily_prices_plot - self._no_annual_daily_seasonal_plot - self._no_annual_daily_redisdual_plot - self._no_annual_weekly_seasonal_plot - self._no_annual_monthly_seasonal_plot - self._no_annual_quarterly_seasonal_plot - self._no_weekdaily_seasonal_plot
-        cur_progress = 0
+        max_progress = 10 - self._no_overall_daily_prices_plot - self._no_overall_daily_trend_plot - self._no_overall_daily_residual_plot - self._no_annual_daily_prices_plot - self._no_annual_daily_seasonal_plot - self._no_annual_daily_redisdual_plot - self._no_annual_weekly_seasonal_plot - self._no_annual_monthly_seasonal_plot - self._no_annual_quarterly_seasonal_plot - self._no_weekdaily_seasonal_plot
+        bar = Bar('Processing', max=max_progress, suffix='%(percent).1f%% - ETA %(eta)ds')
 
         # Set the figure size to DIN A4 dimensions with a 10mm border
         fig_width = 210 + 20  # 210mm + 10mm border on each side
@@ -110,7 +104,7 @@ class PdfView(View):
                     axs[current_axis].set_title(f'Daily close prices of last {self._model.range_num_of_years} years')
                     axs[current_axis].set_ylabel(self._model.ticker.info['currency'])
                     current_axis += 1
-                    cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
+                    bar.next()
 
                 # Plot overall daily trend of last x years
                 if not self._no_overall_daily_trend_plot:
@@ -121,7 +115,7 @@ class PdfView(View):
                     axs[current_axis].set_title(f'Fitting of daily closing prices to STL trend of last {self._model.range_num_of_years} years')
                     axs[current_axis].set_ylabel(self._model.ticker.info['currency'])
                     current_axis += 1
-                    cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
+                    bar.next()
 
                 # Plot overall daily residual of last x years
                 if not self._no_overall_daily_residual_plot:
@@ -129,7 +123,7 @@ class PdfView(View):
                     sns.lineplot(data=overall_df, dashes=False, ax=axs[current_axis], legend='full')
                     axs[current_axis].set_title(f'Residual of STL trend of last {self._model.range_num_of_years} years')
                     axs[current_axis].set_ylabel(self._model.ticker.info['currency'])
-                    cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
+                    bar.next()
 
                 pdf.savefig(fig_overall, facecolor='w')
 
@@ -166,7 +160,7 @@ class PdfView(View):
                     axs[current_axis].legend(labels=labels)
                     axs[current_axis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
                     current_axis += 1
-                    cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
+                    bar.next()
 
                 # Plot annual daily seasonal prices with confidence band
                 if not self._no_annual_daily_seasonal_plot:
@@ -184,7 +178,7 @@ class PdfView(View):
                     axs[current_axis].legend(labels=labels)
                     axs[current_axis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
                     current_axis += 1
-                    cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
+                    bar.next()
 
                 # Plot annual daily residual prices with confidence band
                 if not self._no_annual_daily_redisdual_plot:
@@ -202,7 +196,7 @@ class PdfView(View):
                     axs[current_axis].legend(labels=labels)
                     axs[current_axis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
                     current_axis += 1
-                    cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
+                    bar.next()
 
                 # Plot annual quarterly seasonal prices
                 if not self._no_annual_quarterly_seasonal_plot:
@@ -214,7 +208,7 @@ class PdfView(View):
                     axs[current_axis].set_ylabel('USD')
                     axs[current_axis].set_title('Quarterly')
                     current_axis += 1
-                    cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
+                    bar.next()
 
                 # Plot annual monthly seasonal prices
                 if not self._no_annual_monthly_seasonal_plot:
@@ -226,7 +220,7 @@ class PdfView(View):
                     axs[current_axis].set_ylabel('USD')
                     axs[current_axis].set_title('Monthly')
                     current_axis += 1
-                    cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
+                    bar.next()
 
                 # Plot annual weekly seasonal prices
                 if not self._no_annual_weekly_seasonal_plot:
@@ -239,7 +233,7 @@ class PdfView(View):
                     axs[current_axis].set_title('Weekly')
                     axs[current_axis].tick_params(axis='x', labelsize=4)
                     current_axis += 1
-                    cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
+                    bar.next()
 
                 # Plot weekdaily seasonal prices
                 if not self._no_weekdaily_seasonal_plot:
@@ -251,9 +245,12 @@ class PdfView(View):
                     axs[current_axis].set_ylabel('USD')
                     axs[current_axis].set_title('Weekdaily')
                     current_axis += 1
-                    cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
+                    bar.next()
 
                 pdf.savefig(fig_annually, facecolor='w')
 
         # Close the PDF file
         plt.close('all')
+
+        # Close the progress bar
+        bar.finish()
