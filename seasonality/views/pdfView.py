@@ -37,8 +37,9 @@ class PdfView(View):
     def render(self) -> None:
         """ Creates a PDF file with the analysis results """
 
+        # configure progress bar
         max_progress = 11
-        cur_progress = 0; _print_progress(cur_progress, max_progress)  # noqa: 702
+        cur_progress = 0
 
         # Set the figure size to DIN A4 dimensions with a 10mm border
         fig_width = 210 + 20  # 210mm + 10mm border on each side
@@ -109,7 +110,6 @@ class PdfView(View):
             # Plot annual daily closing prices with confidence band
             annual_df = self._model.get_annual_daily_prices()
             sns.lineplot(data=annual_df, x='Day', y='Close', ax=axs[current_axis], sort=True, errorbar=self._ann_conf_band)
-            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
             axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
             axs[current_axis].set_ylabel('USD')
@@ -121,12 +121,12 @@ class PdfView(View):
             axs[current_axis].legend(labels=labels)
             axs[current_axis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
             current_axis += 1
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             axs.append(fig_annually.add_subplot(gs[1, :]))   # add plot over full line
             # Plot annual daily seasonal prices with confidence band
             annunal_seasonal_decomp_df = self._model.get_annual_daily_seasonal()
             sns.lineplot(data=annunal_seasonal_decomp_df, ax=axs[current_axis], x='Day', y='value', errorbar=self._ann_conf_band)
-            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
             axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
             axs[current_axis].set_ylabel('USD')
@@ -138,12 +138,12 @@ class PdfView(View):
             axs[current_axis].legend(labels=labels)
             axs[current_axis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
             current_axis += 1
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             axs.append(fig_annually.add_subplot(gs[2, :]))   # add plot over full line
             # Plot annual daily residual prices with confidence band
             annunal_resid_decomp_df = self._model.get_annual_daily_residual()
             sns.lineplot(data=annunal_resid_decomp_df, ax=axs[current_axis], x='Day', y='value', errorbar=self._ann_conf_band)
-            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
             axs[current_axis].xaxis.set_major_locator(mdates.MonthLocator())
             axs[current_axis].axvline(f'{"{:02d}".format(dt.date.today().month)}-{"{:02d}".format(dt.date.today().day)}', ymin=0.05, ymax=0.95, linestyle='dashed')
             axs[current_axis].set_ylabel('USD')
@@ -155,6 +155,7 @@ class PdfView(View):
             axs[current_axis].legend(labels=labels)
             axs[current_axis].xaxis.set_major_formatter(mdates.DateFormatter("%b"))
             current_axis += 1
+            cur_progress += 1; _print_progress(cur_progress, max_progress) # noqa: 702
 
             axs.append(fig_annually.add_subplot(gs[3, 0]))
             # Plot annual quarterly seasonal prices
