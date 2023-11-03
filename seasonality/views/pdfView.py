@@ -94,6 +94,7 @@ class PdfView(View):
                 _pdf_layout(fig_overall)
                 fig_overall.suptitle(f'Overall analysis of\n$\\bf{{{long_name_mathtext}}}$', fontsize=20)
 
+                # if only one subplot, convert to list
                 if num_subplots == 1:
                     axs = [axs]
                 current_axis = 0
