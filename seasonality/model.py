@@ -19,13 +19,13 @@ import yfinance as yf
 
 from statsmodels.tsa.seasonal import STL
 
-from requests import Session
+import requests
 from requests_cache import CacheMixin, SQLiteCache
 from requests_ratelimiter import LimiterMixin, MemoryQueueBucket
 from pyrate_limiter import Duration, RequestRate, Limiter
 
 
-class CachedLimiterSession(CacheMixin, LimiterMixin, Session):
+class CachedLimiterSession(CacheMixin, LimiterMixin, requests.Session):
     pass
 
 
@@ -161,7 +161,7 @@ class Model:
                             bucket_class=MemoryQueueBucket),
             backend=SQLiteCache(cache_filename),
         )
-        self.ticker = yf.Ticker(self.symbol, session=session)
+        self._ticker = yf.Ticker(self.symbol, session=session)
 
         if not os.path.isfile(history_filename):
             yf.pdr_override()  # <== that's all it takes :-)
@@ -172,8 +172,8 @@ class Model:
 
         self._overall_daily_prices = self._overall_daily_prices[['Close']]
 
-        # for (k, v) in ticker.info.items():
-        #    D(f'* {k}: {v}')
+        # for (k, v) in self._ticker.info.items():
+        #     print(f'* {k}: {v}')
 
         # set correct frequency
         self._overall_daily_prices = self._overall_daily_prices.asfreq('B')
@@ -214,6 +214,16 @@ class Model:
         self._overall_daily_seasonal['value'] = decompose_result.seasonal
         self._overall_daily_trend['value'] = decompose_result.trend
         self._overall_daily_residual['value'] = decompose_result.resid
+
+    def get_symbol_name(self) -> str:
+        """Returns the long name of the symbol otherwise the short name otherwise the symbol ticker name."""
+        try:
+            name = self._ticker.info['longName']
+        except KeyError:
+            name = self._ticker.info['shortName']
+        except requests.exceptions.HTTPError:
+            name = self.symbol
+        return name
 
     def get_overall_daily_prices(self) -> pd.DataFrame:
         """Returns the original dataframe as downloaded from internet."""

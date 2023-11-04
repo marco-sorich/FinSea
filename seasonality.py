@@ -7,7 +7,7 @@ import seasonality as ssn
 # select the symbol to analyze
 
 # symbol = '2B7K.DE'    # iShares MSCI World SRI UCITS ETF EUR (Acc)
-symbol = 'EUNL.DE'    # iShares Core MSCI World UCITS ETF USD (Acc)
+# symbol = 'EUNL.DE'    # iShares Core MSCI World UCITS ETF USD (Acc)
 # symbol = 'EURUSD=X'   # USD/EUR
 # symbol = 'GBPUSD=X'   # GBP/USD
 # symbol = 'AUDUSD=X'   # AUD/USD
@@ -20,10 +20,12 @@ symbol = 'EUNL.DE'    # iShares Core MSCI World UCITS ETF USD (Acc)
 # symbol = 'ETH-USD'    # Ethereum USD
 # symbol = '^GSPC'      # S&P 500
 # symbol = 'AAPL'       # Apple
+# symbol = '^GDAXI'      # DAX
+symbol = '^GDAXI'      # DAX
 
 
 # set maximum number of years to analyze
-max_num_of_years = 5
+max_num_of_years = 25
 
 
 def view_type(view_str: str) -> ssn.Views:

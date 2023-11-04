@@ -60,8 +60,9 @@ class PdfView(View):
         """ Creates a PDF file with the analysis results """
 
         # configure progress bar
-        max_progress = 10 - self._no_overall_daily_prices_plot - self._no_overall_daily_trend_plot - self._no_overall_daily_residual_plot - self._no_annual_daily_prices_plot - self._no_annual_daily_seasonal_plot - self._no_annual_daily_redisdual_plot - self._no_annual_weekly_seasonal_plot - self._no_annual_monthly_seasonal_plot - self._no_annual_quarterly_seasonal_plot - self._no_weekdaily_seasonal_plot
+        max_progress = 11 - self._no_overall_daily_prices_plot - self._no_overall_daily_trend_plot - self._no_overall_daily_residual_plot - self._no_annual_daily_prices_plot - self._no_annual_daily_seasonal_plot - self._no_annual_daily_redisdual_plot - self._no_annual_weekly_seasonal_plot - self._no_annual_monthly_seasonal_plot - self._no_annual_quarterly_seasonal_plot - self._no_weekdaily_seasonal_plot
         bar = Bar('Processing', max=max_progress, suffix='%(percent).1f%% - ETA %(eta)ds')
+        bar.next()
 
         # Set the figure size to DIN A4 dimensions with a 10mm border
         fig_width = 210 + 20  # 210mm + 10mm border on each side
@@ -75,8 +76,8 @@ class PdfView(View):
         sns.set_theme(context='paper', font_scale=0.8, rc={'figure.figsize': (fig_width / 25.4, fig_height / 25.4)}, style='darkgrid')
 
         # get long name of ticker and prepare for MathText
-        long_name = self._model.ticker.info["longName"]
-        long_name_mathtext = long_name.replace(" ", "\\ ")
+        symbol_name = self._model.get_symbol_name()
+        symbol_name_mathtext = symbol_name.replace("^", "").replace(" ", "\\ ")
 
         # Create new PDF file
         with PdfPages(self._file_path) as pdf:
@@ -86,7 +87,7 @@ class PdfView(View):
             if num_subplots > 0:
                 fig_overall, axs = plt.subplots(num_subplots, 1)
                 _pdf_layout(fig_overall)
-                fig_overall.suptitle(f'Overall analysis of\n$\\bf{{{long_name_mathtext}}}$', fontsize=20)
+                fig_overall.suptitle(f'Overall analysis of\n$\\bf{{{symbol_name_mathtext}}}$', fontsize=20)
 
                 # if only one subplot, convert to list
                 if num_subplots == 1:
@@ -140,7 +141,7 @@ class PdfView(View):
                 fig_annually = plt.figure()
                 _pdf_layout(fig_annually)
                 gs = GridSpec(num_lines, num_cols, figure=fig_annually)
-                fig_annually.suptitle(f'Annual analysis of\n$\\bf{{{long_name_mathtext}}}$\nof last {self._model.range_num_of_years} years\n', fontsize=20)
+                fig_annually.suptitle(f'Annual analysis of\n$\\bf{{{symbol_name_mathtext}}}$\nof last {self._model.range_num_of_years} years\n', fontsize=20)
 
                 current_axis = 0
 

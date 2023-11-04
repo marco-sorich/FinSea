@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/seasonality.py",
             "console": "integratedTerminal",
             "args": ["--view", "console"],
-            "justMyCode": true
+            "justMyCode": false
         },
         {
             "name": "PDF",
@@ -20,16 +20,16 @@
             "program": "${workspaceFolder}/seasonality.py",
             "console": "integratedTerminal",
             "args": ["--view", "pdf", "--file", "myplots.pdf"],
-            "justMyCode": true
+            "justMyCode": false
         },
         {
-            "name": "PDF only overall prices",
+            "name": "PDF annual seasonality",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/seasonality.py",
             "console": "integratedTerminal",
-            "args": ["--view", "pdf", "--file", "myplots.pdf", "-not", "-nor", "-noap", "-noas", "-noar", "-noaw", "-noam", "-noaq", "-now"],
-            "justMyCode": true
+            "args": ["--view", "pdf", "--file", "myplots.pdf", "-nop", "-not", "-nor", "-noas", "-noar", "-noaw", "-noam", "-noaq", "-now"],
+            "justMyCode": false
         },
         {
             "name": "Help message",
@@ -38,16 +38,16 @@
             "program": "${workspaceFolder}/seasonality.py",
             "console": "integratedTerminal",
             "args": ["--help"],
-            "justMyCode": true
+            "justMyCode": false
         },
         {
-            "name": "PDF",
+            "name": "PDF /w confidence intervals",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/seasonality.py",
             "console": "integratedTerminal",
-            "args": ["--view", "pdf", "--file", "myplots.pdf"],
-            "justMyCode": true
+            "args": ["--view", "pdf", "--file", "myplots.pdf", "-a"],
+            "justMyCode": false
         },
    ]
 }
