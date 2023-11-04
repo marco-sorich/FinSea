@@ -32,7 +32,9 @@ class Analyzer:
             no_annual_weekly_seasonal_plot: bool = False,
             no_annual_monthly_seasonal_plot: bool = False,
             no_annual_quarterly_seasonal_plot: bool = False,
-            no_weekdaily_seasonal_plot: bool = True
+            no_weekdaily_seasonal_plot: bool = True,
+            page_width: int = 210,
+            page_height: int = 297
     ) -> None:
         """
         Renders the seasonality for the given symbol and maximum number of years to analyze.
@@ -52,7 +54,10 @@ class Analyzer:
                 no_annual_weekly_seasonal_plot=no_annual_weekly_seasonal_plot,
                 no_annual_monthly_seasonal_plot=no_annual_monthly_seasonal_plot,
                 no_annual_quarterly_seasonal_plot=no_annual_quarterly_seasonal_plot,
-                no_weekdaily_seasonal_plot=no_weekdaily_seasonal_plot)
+                no_weekdaily_seasonal_plot=no_weekdaily_seasonal_plot,
+                page_width=page_width,
+                page_height=page_height
+            )
         elif view == Views.CONSOLE:
             self.__view = ConsoleView(self.__model)
         else:  # pragma: no cover

@@ -28,7 +28,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/seasonality.py",
             "console": "integratedTerminal",
-            "args": ["--view", "pdf", "--file", "myplots.pdf", "-nop", "-not", "-nor", "-noas", "-noar", "-noaw", "-noam", "-noaq", "-now"],
+            "args": ["--view", "pdf", "--file", "myplots.pdf", "-nop", "-not", "-nor", "-noas", "-noar", "-noaw", "-noam", "-noaq", "-now", "-ph", "100"],
             "justMyCode": false
         },
         {

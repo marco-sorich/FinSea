@@ -53,6 +53,8 @@ parser.add_argument('-noaw', '--no_annual_weekly_seasonal_plot', action='store_t
 parser.add_argument('-noam', '--no_annual_monthly_seasonal_plot', action='store_true', help='Disable annual monthly seasonal plot in pdf view')
 parser.add_argument('-noaq', '--no_annual_quarterly_seasonal_plot', action='store_true', help='Disable annual quarterly seasonal plot in pdf view')
 parser.add_argument('-now', '--no_weekdaily_seasonal_plot', action='store_true', help='Disable weekdaily seasonal plot in pdf view')
+parser.add_argument('-pw', '--page_width', type=int, default=210, help='Page width in mm for pdf view (default: 210)')
+parser.add_argument('-ph', '--page_height', type=int, default=297, help='Page height in mm for pdf view (default: 297)')
 
 
 analyzer = ssn.Analyzer(parser.parse_args().symbol, parser.parse_args().years)
@@ -71,7 +73,10 @@ analyzer.render(
     no_annual_weekly_seasonal_plot=parser.parse_args().no_annual_weekly_seasonal_plot,
     no_annual_monthly_seasonal_plot=parser.parse_args().no_annual_monthly_seasonal_plot,
     no_annual_quarterly_seasonal_plot=parser.parse_args().no_annual_quarterly_seasonal_plot,
-    no_weekdaily_seasonal_plot=parser.parse_args().no_weekdaily_seasonal_plot)
+    no_weekdaily_seasonal_plot=parser.parse_args().no_weekdaily_seasonal_plot,
+    page_width=parser.parse_args().page_width,
+    page_height=parser.parse_args().page_height
+)
 
 if parser.parse_args().file != '':
     os.system(f'open {parser.parse_args().file}')

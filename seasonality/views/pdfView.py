@@ -36,6 +36,8 @@ class PdfView(View):
             no_annual_monthly_seasonal_plot: bool = False,
             no_annual_quarterly_seasonal_plot: bool = False,
             no_weekdaily_seasonal_plot: bool = True,
+            page_width: int = 210,
+            page_height: int = 297,
     ) -> None:
         """ Creates a new PdfView object with the given self._model and file path """
         super().__init__(model)
@@ -55,6 +57,8 @@ class PdfView(View):
         self._no_annual_monthly_seasonal_plot = no_annual_monthly_seasonal_plot
         self._no_annual_quarterly_seasonal_plot = no_annual_quarterly_seasonal_plot
         self._no_weekdaily_seasonal_plot = no_weekdaily_seasonal_plot
+        self._page_width = page_width
+        self._page_height = page_height
 
     def render(self) -> None:
         """ Creates a PDF file with the analysis results """
@@ -65,8 +69,8 @@ class PdfView(View):
         bar.next()
 
         # Set the figure size to DIN A4 dimensions with a 10mm border
-        fig_width = 210 + 20  # 210mm + 10mm border on each side
-        fig_height = 297 + 20  # 297mm + 10mm border on each side
+        fig_width = self._page_width + 20  # 10mm border on each side
+        fig_height = self._page_height + 20  # 10mm border on each side
 
         # set number of days for rolling averages for full data plots
         rolling_narrow_resolution = 50
