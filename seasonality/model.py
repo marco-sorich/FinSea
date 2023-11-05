@@ -29,8 +29,8 @@ class CachedLimiterSession(CacheMixin, LimiterMixin, requests.Session):
     pass
 
 
-# Prepare new dataframe in wide form for annual data distribution
-def _df_to_wide_form(
+# Prepare new dataframe in subcycle form for annual data distribution
+def _df_to_subcycle_form(
         input_df: pd.DataFrame,
         range: pd.date_range,
         freq: str = 'd',
@@ -39,11 +39,15 @@ def _df_to_wide_form(
         with_fill: bool = True,
         drop_leap: bool = True):
 
-    """Normalizes given dataframe to a new wide form dataframe over one year.
+    """Normalizes given dataframe to a new subcycle form dataframe over one year.
 
     This routine takes a dataframe with expected data over several years and
-    creates a new target dataframe with over one year with multiple values
-    for each `freq` (e.g. day) of several years.
+    creates a new target dataframe over one year with multiple values
+    for each year.
+    The designation 'subcycle' is based on the paper 'STL: A Seasonal-Trend Decomposition
+    Procedure Based on Loess' from Robert .B Cleveland, Wiliam S. Cleveland, Jean E. McRae
+    and Irma Terpenning. Here, the term 'subcycle' describes the same datapoint (e.g. Jan, 1st)
+    spanning over the whole periodicity of the data (e.g. 5 years).
 
     Parameters:
     -----------
@@ -70,30 +74,30 @@ def _df_to_wide_form(
     """
 
     # Create new dataframe
-    wideDf = pd.DataFrame(data=input_df)
+    subcycleDf = pd.DataFrame(data=input_df)
 
     # set correct frequency for better comparison
-    wideDf = wideDf.asfreq(freq)
+    subcycleDf = subcycleDf.asfreq(freq)
 
     # fill up missing values for better comparison
-    wideDf = wideDf.ffill() if with_fill else wideDf
+    subcycleDf = subcycleDf.ffill() if with_fill else subcycleDf
 
     # Drop Feb. 29th of leap years for better comparison
-    wideDf = wideDf[~((wideDf.index.month == 2) & (wideDf.index.day == 29))] if drop_leap else wideDf
+    subcycleDf = subcycleDf[~((subcycleDf.index.month == 2) & (subcycleDf.index.day == 29))] if drop_leap else subcycleDf
 
     # Create year and month columns
-    wideDf['Year'], wideDf[col_name] = wideDf.index.year, wideDf.index.strftime(col_content)
+    subcycleDf['Year'], subcycleDf[col_name] = subcycleDf.index.year, subcycleDf.index.strftime(col_content)
 
     # crop dataframe to last full years
-    wideDf = wideDf[range.min():range.max()]
+    subcycleDf = subcycleDf[range.min():range.max()]
 
     # remove date index and return to numbered index
-    wideDf = wideDf.reset_index()
+    subcycleDf = subcycleDf.reset_index()
 
     # remove date column which was left over from removing date index
-    wideDf = wideDf.drop('Date', axis=1)
+    subcycleDf = subcycleDf.drop('Date', axis=1)
 
-    return wideDf
+    return subcycleDf
 
 
 class Model:
@@ -135,7 +139,7 @@ class Model:
             Use robust or simple STL decomposition (default is simple)
 
             annual_rolling_days: int, optional
-            Number of days for integrated rolling mean for annual daily wide form data
+            Number of days for integrated rolling mean for annual daily subcycle form data
         """
         self.symbol = symbol
         self.years = years
@@ -196,7 +200,7 @@ class Model:
         }
         pickle.dump(backtest_info, open(pickle_filename, 'wb'))
 
-        self._annual_daily_prices = _df_to_wide_form(self._overall_daily_prices, self.range_max_yrs)
+        self._annual_daily_prices = _df_to_subcycle_form(self._overall_daily_prices, self.range_max_yrs)
 
         # set to multiindex: 1st level 'Day', 2nd level 'Year'
         self._annual_daily_prices = self._annual_daily_prices.set_index(['Year', 'Day'])
@@ -242,35 +246,35 @@ class Model:
         return self._overall_daily_residual
 
     def get_annual_daily_prices(self) -> pd.DataFrame:
-        """Returns the original annual dataframe converted to wide form."""
+        """Returns the original annual dataframe converted to subcycle form."""
         return self._annual_daily_prices
 
     def get_annual_daily_seasonal(self) -> pd.DataFrame:
-        """Returns the decomposed annual daily seasonal dataframe in wide form."""
+        """Returns the decomposed annual daily seasonal dataframe in subcycle form."""
         # prepare annual dataframes with multiindex
-        return _df_to_wide_form(self._overall_daily_seasonal, self.range_max_yrs)
+        return _df_to_subcycle_form(self._overall_daily_seasonal, self.range_max_yrs)
 
     def get_annual_daily_residual(self) -> pd.DataFrame:
-        """Returns the decomposed annual daily residual dataframe in wide form."""
+        """Returns the decomposed annual daily residual dataframe in subcycle form."""
         # prepare annual dataframes with multiindex
-        return _df_to_wide_form(self._overall_daily_residual, self.range_max_yrs)
+        return _df_to_subcycle_form(self._overall_daily_residual, self.range_max_yrs)
 
     def get_monthly_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed annual monthly seasonal dataframe."""
         # prepare annual dataframes with multiindex including the rolling average
-        return _df_to_wide_form(self._overall_daily_seasonal.resample('M').mean(), self.range_max_yrs, freq='M', col_name='Month', col_content='%b', with_fill=False, drop_leap=False)
+        return _df_to_subcycle_form(self._overall_daily_seasonal.resample('M').mean(), self.range_max_yrs, freq='M', col_name='Month', col_content='%b', with_fill=False, drop_leap=False)
 
     def get_weekdaily_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed weekdaily seasonal dataframe."""
         # prepare annual dataframes with multiindex including the rolling average
-        return _df_to_wide_form(self._overall_daily_seasonal, self.range_max_yrs, freq='B', col_name='Weekday', col_content='%a', with_fill=False, drop_leap=False)
+        return _df_to_subcycle_form(self._overall_daily_seasonal, self.range_max_yrs, freq='B', col_name='Weekday', col_content='%a', with_fill=False, drop_leap=False)
 
     def get_annual_quarterly_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed annual quarterly seasonal dataframe."""
         # prepare annual dataframes with multiindex including the rolling average
-        return _df_to_wide_form(self._overall_daily_seasonal.resample('Q').mean(), self.range_max_yrs, freq='Q', col_name='Quarter', col_content='%b', with_fill=False, drop_leap=False)
+        return _df_to_subcycle_form(self._overall_daily_seasonal.resample('Q').mean(), self.range_max_yrs, freq='Q', col_name='Quarter', col_content='%b', with_fill=False, drop_leap=False)
 
     def get_annual_weekly_seasonal(self) -> pd.DataFrame:
         """Returns the decomposed annual weekly seasonal dataframe."""
         # prepare annual dataframes with multiindex including the rolling average
-        return _df_to_wide_form(self._overall_daily_seasonal.resample('W').mean(), self.range_max_yrs, freq='W', col_name='Week', col_content='%V', with_fill=False, drop_leap=False)
+        return _df_to_subcycle_form(self._overall_daily_seasonal.resample('W').mean(), self.range_max_yrs, freq='W', col_name='Week', col_content='%V', with_fill=False, drop_leap=False)
