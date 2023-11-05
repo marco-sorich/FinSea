@@ -185,9 +185,15 @@ class Model:
         # fill up missing values
         self._overall_daily_prices = self._overall_daily_prices.ffill()
 
-        # prepare range of max 5 years or smaller if dataframe is smaller
-        first_day = pd.to_datetime(str((self._overall_daily_prices.index.year.min() + 1 if ((self._overall_daily_prices.index.year.max() - 1) - (self._overall_daily_prices.index.year.min() + 1)) < self.years else self._overall_daily_prices.index.year.max() - self.years)) + '-01-01')
-        last_day = pd.to_datetime(str(self._overall_daily_prices.index.year.max() - 1) + '-12-31')
+        # prepare range of max selected years if dataframe's daterange is bigger
+        # or smaller range if dataframe's daterange is smaller
+        min_year = self._overall_daily_prices.index.year.min() + 1  # to be able to take Jan 1st of next full year
+        max_year = self._overall_daily_prices.index.year.max() - 1  # to be able to take Dec 31st of previous full year
+        if (max_year - min_year) < self.years:                      # check if dataframe's daterange is smaller
+            first_day = pd.to_datetime(str(min_year) + '-01-01')
+        else:
+            first_day = pd.to_datetime(str(max_year - self.years) + '-01-01')
+        last_day = pd.to_datetime(str(max_year) + '-12-31')
         self.range_max_yrs = pd.date_range(first_day, last_day, freq='D')
 
         # get actual number of calculated years for dataframe
