@@ -79,7 +79,7 @@ class PdfView(View):
         # configure graphical apperance of plots
         sns.set_theme(context='paper', font_scale=0.8, rc={'figure.figsize': (fig_width / 25.4, fig_height / 25.4)}, style='darkgrid')
 
-        # get long name of ticker and prepare for MathText
+        # get long name of get_symbol_currency()MathText
         symbol_name = self._model.get_symbol_name()
         symbol_name_mathtext = symbol_name.replace("^", "").replace(" ", "\\ ")
 
@@ -107,7 +107,7 @@ class PdfView(View):
                     overall_df = overall_df[self._model.range_max_yrs.min():pd.to_datetime('today')]
                     sns.lineplot(data=overall_df, dashes=False, ax=axs[current_axis], legend='full')
                     axs[current_axis].set_title(f'Daily close prices of last {self._model.range_num_of_years} years')
-                    axs[current_axis].set_ylabel(self._model.ticker.info['currency'])
+                    axs[current_axis].set_ylabel(self._model.get_symbol_currency())
                     current_axis += 1
                     bar.next()
 
@@ -118,7 +118,7 @@ class PdfView(View):
                     overall_df['Daily closing price'] = self._model.get_overall_daily_prices()[self._model.range_max_yrs.min():pd.to_datetime('today')]['Close']
                     sns.lineplot(data=overall_df, dashes=False, ax=axs[current_axis], legend='full')
                     axs[current_axis].set_title(f'Fitting of daily closing prices to STL trend of last {self._model.range_num_of_years} years')
-                    axs[current_axis].set_ylabel(self._model.ticker.info['currency'])
+                    axs[current_axis].set_ylabel(self._model.get_symbol_currency())
                     current_axis += 1
                     bar.next()
 
@@ -127,7 +127,7 @@ class PdfView(View):
                     overall_df = pd.DataFrame(data=self._model.get_overall_daily_residual())
                     sns.lineplot(data=overall_df, dashes=False, ax=axs[current_axis], legend='full')
                     axs[current_axis].set_title(f'Residual of STL trend of last {self._model.range_num_of_years} years')
-                    axs[current_axis].set_ylabel(self._model.ticker.info['currency'])
+                    axs[current_axis].set_ylabel(self._model.get_symbol_currency())
                     bar.next()
 
                 pdf.savefig(fig_overall, facecolor='w')

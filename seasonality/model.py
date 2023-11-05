@@ -225,9 +225,17 @@ class Model:
             name = self._ticker.info['longName']
         except KeyError:
             name = self._ticker.info['shortName']
-        except requests.exceptions.HTTPError:
+        except Exception:
             name = self.symbol
         return name
+    
+    def get_symbol_currency(self) -> str:
+        """Returns the currency of the symbol."""
+        try:
+            currency = self._ticker.info['currency']
+        except Exception:
+            currency = 'currency'
+        return currency
 
     def get_overall_daily_prices(self) -> pd.DataFrame:
         """Returns the original dataframe as downloaded from internet."""
