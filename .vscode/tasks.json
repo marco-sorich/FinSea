@@ -3,9 +3,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Profile seasonality.py",
+            "label": "Profile finsea.py",
             "type": "shell",
-            "command": "source .venv/bin/activate && python -m cProfile -o seasonality.prof seasonality.py && snakeviz seasonality.prof"
+            "command": "source .venv/bin/activate && python -m cProfile -o finsea.prof finsea.py && snakeviz finsea.prof"
             }
         }
     ]
