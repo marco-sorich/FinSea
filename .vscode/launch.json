@@ -23,7 +23,7 @@
             "justMyCode": false
         },
         {
-            "name": "PDF annual finsea",
+            "name": "PDF annual seasonality",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/finsea.py",
