@@ -9,11 +9,13 @@ Classes:
 
 import os
 import datetime as dt
+from dateutil.relativedelta import relativedelta
 import pickle
 
 
 import pandas as pd
 from pandas_datareader import data as pdr
+
 
 import yfinance as yf
 
@@ -85,17 +87,20 @@ def _df_to_subcycle_form(
     # Drop Feb. 29th of leap years for better comparison
     subcycleDf = subcycleDf[~((subcycleDf.index.month == 2) & (subcycleDf.index.day == 29))] if drop_leap else subcycleDf
 
-    # Create year and month columns
+    # Create year and col_name columns
     subcycleDf['Year'], subcycleDf[col_name] = subcycleDf.index.year, subcycleDf.index.strftime(col_content)
 
     # crop dataframe to last full years
     subcycleDf = subcycleDf[range.min():range.max()]
 
     # remove date index and return to numbered index
-    subcycleDf = subcycleDf.reset_index()
+    # subcycleDf = subcycleDf.reset_index()
 
     # remove date column which was left over from removing date index
-    subcycleDf = subcycleDf.drop('Date', axis=1)
+    # subcycleDf = subcycleDf.drop('Date', axis=1)
+
+    # sort by col_name and year column
+    # subcycleDf = subcycleDf.sort_values(by=[col_name, 'Year'])
 
     return subcycleDf
 
@@ -185,39 +190,47 @@ class Model:
         # fill up missing values
         self._overall_daily_prices = self._overall_daily_prices.ffill()
 
-        # prepare range of max selected years if dataframe's daterange is bigger
-        # or smaller range if dataframe's daterange is smaller
-        min_year = self._overall_daily_prices.index.year.min() + 1  # to be able to take Jan 1st of next full year
-        max_year = self._overall_daily_prices.index.year.max() - 1  # to be able to take Dec 31st of previous full year
-        if (max_year - min_year) < self.years:                      # check if dataframe's daterange is smaller
-            first_day = pd.to_datetime(str(min_year) + '-01-01')
-        else:
-            first_day = pd.to_datetime(str(max_year - self.years) + '-01-01')
-        last_day = pd.to_datetime(str(max_year) + '-12-31')
+        # get yesterday's date
+        last_day = pd.to_datetime('today') - dt.timedelta(days=1)
+
+        # get me the day "years" years before last_day
+        first_day = last_day - relativedelta(years=self.years)
+
+        # check if first_day is before the first day of the dataframe and if so, set it to the first day of the dataframe
+        if first_day < self._overall_daily_prices.index.min():
+            first_day = self._overall_daily_prices.index.min()
+
+        # set the date range to analyze
         self.range_max_yrs = pd.date_range(first_day, last_day, freq='D')
 
         # get actual number of calculated years for dataframe
-        self.range_num_of_years = self.range_max_yrs.max().year - self.range_max_yrs.min().year + 1
+        self.range_num_of_years = self.range_max_yrs.max().year - self.range_max_yrs.min().year
 
         # save information for backtrader
         backtest_info = {
             'history_filename': history_filename,
-            'self.range_max_yrs': self.range_max_yrs,
+            'range_max_yrs': self.range_max_yrs,
+            'first_day': first_day,
+            'last_day': last_day
         }
         pickle.dump(backtest_info, open(pickle_filename, 'wb'))
 
         self._annual_daily_prices = _df_to_subcycle_form(self._overall_daily_prices, self.range_max_yrs)
 
         # set to multiindex: 1st level 'Day', 2nd level 'Year'
-        self._annual_daily_prices = self._annual_daily_prices.set_index(['Year', 'Day'])
+        # self._annual_daily_prices = self._annual_daily_prices.set_index(['Year', 'Day'])
 
         # reorder by index level 'Day'
-        self._annual_daily_prices = self._annual_daily_prices.sort_index(level='Year')
+        # self._annual_daily_prices = self._annual_daily_prices.sort_index(level='Year')
 
         decomp_df = pd.DataFrame(data=self._overall_daily_prices)
+        decomp_df = decomp_df.asfreq('d')
+        decomp_df = decomp_df.ffill()
+        decomp_df = decomp_df[~((decomp_df.index.month == 2) & (decomp_df.index.day == 29))]
+        decomp_df = decomp_df[self.range_max_yrs.min():self.range_max_yrs.max()]
 
         # crop dataframe to max 5 last full years
-        decomp_df = decomp_df[self.range_max_yrs.min():pd.to_datetime('today')]
+        # decomp_df = decomp_df[self.range_max_yrs.min():pd.to_datetime('today')]
 
         # decompose seasonal trend and residual via LOESS regression
         decompose_result = STL(decomp_df['Close'], period=365, robust=self.robust, seasonal=7, seasonal_deg=1, trend_deg=1, low_pass_deg=1, seasonal_jump=1, trend_jump=1, low_pass_jump=1).fit()
@@ -234,7 +247,7 @@ class Model:
         except Exception:
             name = self.symbol
         return name
-    
+
     def get_symbol_currency(self) -> str:
         """Returns the currency of the symbol."""
         try:

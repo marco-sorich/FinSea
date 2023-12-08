@@ -2,6 +2,7 @@ backtrader
 matplotlib
 pandas
 pandas-datareader
+progress
 pyrate-limiter
 requests
 requests-cache
@@ -9,4 +10,3 @@ requests-ratelimiter
 seaborn
 statsmodels
 yfinance
-progress

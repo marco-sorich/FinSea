@@ -25,7 +25,7 @@ symbol = '^GDAXI'      # DAX
 
 
 # set maximum number of years to analyze
-max_num_of_years = 25
+max_num_of_years = 5
 
 
 def view_type(view_str: str) -> ssn.Views:
@@ -55,6 +55,8 @@ parser.add_argument('-noaq', '--no_annual_quarterly_seasonal_plot', action='stor
 parser.add_argument('-now', '--no_weekdaily_seasonal_plot', action='store_true', help='Disable weekdaily seasonal plot in pdf view')
 parser.add_argument('-pw', '--page_width', type=int, default=210, help='Page width in mm for pdf view (default: 210)')
 parser.add_argument('-ph', '--page_height', type=int, default=297, help='Page height in mm for pdf view (default: 297)')
+# parser.add_argument('-sd', '--start_date', type=str, help='Start date in YYYY-MM-DD format')
+# parser.add_argument('-ed', '--end_date', type=str, help='End date in YYYY-MM-DD format')
 
 
 analyzer = ssn.Analyzer(parser.parse_args().symbol, parser.parse_args().years)
